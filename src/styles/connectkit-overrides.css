@@ -1,0 +1,125 @@
+[data-ck] {
+  font-family: inherit !important;
+}
+
+@media (max-width: 640px) {
+  [data-ck] .ck-modal-content {
+    max-width: calc(100vw - 2rem) !important;
+    margin: 1rem !important;
+  }
+  
+  [data-ck] .ck-modal-heading {
+    font-size: 1rem !important;
+  }
+  
+  [data-ck] .ck-wallet-option {
+    padding: 0.875rem !important;
+    font-size: 0.875rem !important;
+  }
+  
+  [data-ck] .ck-connectbutton {
+    font-size: 0.875rem !important;
+    padding: 0.5rem 1rem !important;
+  }
+}
+
+[data-ck] button {
+  transition: all 0.15s ease;
+  font-weight: 500;
+}
+
+[data-ck] .ck-connectbutton {
+  padding: 0.75rem 1.5rem !important;
+  font-size: 0.9375rem !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.01em !important;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1) !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+[data-ck] .ck-connectbutton:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+}
+
+[data-ck] .ck-connectbutton:active {
+  transform: translateY(0) !important;
+}
+
+[data-ck] .ck-modal-content {
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--background));
+}
+
+[data-ck] .ck-wallet-option {
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  transition: all 0.15s ease;
+}
+
+[data-ck] .ck-wallet-option:hover {
+  background: hsl(var(--accent));
+  border-color: hsl(var(--accent-foreground) / 0.2);
+  transform: translateY(-1px);
+}
+
+[data-ck] .ck-modal-heading {
+  font-size: 1.125rem;
+  margin-bottom: 1.5rem;
+}
+
+[data-ck] .ck-recent-badge {
+  background: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
+  font-size: 0.75rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-weight: 500;
+}
+
+.dark [data-ck] {
+  --ck-body-divider: hsl(var(--border));
+  --ck-body-divider-secondary: hsl(var(--border));
+}
+
+[data-ck] * {
+  transition-property: background-color, color, border-color, transform;
+  transition-duration: 150ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-ck] .ck-overlay {
+  z-index: 50;
+}
+
+[data-ck] .ck-dropdown-button {
+  border: 1px solid hsl(var(--border));
+  font-weight: 400;
+  font-size: 0.875rem;
+}
+
+[data-ck] .ck-footer-link {
+  color: hsl(var(--muted-foreground));
+  font-size: 0.875rem;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+[data-ck] .ck-footer-link:hover {
+  color: hsl(var(--foreground));
+}
+
+[data-ck] button:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+
+[data-ck] .ck-close-button {
+  color: hsl(var(--muted-foreground));
+  transition: color 0.15s ease;
+}
+
+[data-ck] .ck-close-button:hover {
+  color: hsl(var(--foreground));
+}
