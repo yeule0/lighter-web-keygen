@@ -167,7 +167,7 @@ function App() {
                     </svg>
                   </a>
                   <a
-                    href="https://github.com/yeule0"
+                    href="https://github.com/yeule0/lighter-web-keygen"
                     target="_blank"
                     rel="noreferrer"
                     className="text-muted-foreground hover:text-foreground transition-all hover:scale-110"
