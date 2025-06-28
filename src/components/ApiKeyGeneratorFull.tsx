@@ -40,9 +40,6 @@ export function ApiKeyGeneratorFull({ accountIndex, network, onApiKeyGenerated }
   const [info, setInfo] = useState<string | null>(null)
   const [step, setStep] = useState<'setup' | 'generate' | 'sign' | 'submit' | 'success'>('setup')
   
-  const [setupMode, setSetupMode] = useState<'new' | 'existing' | null>(null)
-  const [currentL2Key, setCurrentL2Key] = useState('')
-  const [currentKeyIndex, setCurrentKeyIndex] = useState('0')
   
   const [targetKeyIndex, setTargetKeyIndex] = useState('1')
   const [generatedKeys, setGeneratedKeys] = useState<{ privateKey: string; publicKey: string } | null>(null)
@@ -71,32 +68,9 @@ export function ApiKeyGeneratorFull({ accountIndex, network, onApiKeyGenerated }
     try {
       const crypto = await LighterFullCrypto.initialize()
       
-      if (setupMode === 'new') {
-        setInfo('Generating a secure random bootstrap key for initial setup...')
-        const defaultKey = await crypto.getDefaultKey()
-        await crypto.setCurrentKey(defaultKey.privateKey)
-        setCurrentL2Key(defaultKey.privateKey)
-        setCurrentKeyIndex('0')
-      } else if (setupMode === 'existing' && currentL2Key) {
-        let keyToUse = currentL2Key.trim()
-        
-        if (keyToUse.startsWith('0x') || keyToUse.startsWith('0X')) {
-          keyToUse = keyToUse.slice(2)
-        }
-        
-        if (!/^[0-9a-fA-F]+$/.test(keyToUse)) {
-          throw new Error('Invalid private key format. Must be hexadecimal.')
-        }
-        
-        if (keyToUse.length !== 80) {
-          throw new Error(`Invalid private key length. Expected 40 bytes (80 hex characters), got ${keyToUse.length / 2} bytes.`)
-        }
-        
-        const pubKey = await crypto.setCurrentKey('0x' + keyToUse)
-        setInfo(`Current key loaded. Public key: ${pubKey}`)
-      } else {
-        throw new Error('Invalid setup state')
-      }
+      setInfo('Generating a secure random bootstrap key for initial setup...')
+      const defaultKey = await crypto.getDefaultKey()
+      await crypto.setCurrentKey(defaultKey.privateKey)
       
       setStep('generate')
     } catch (err) {
@@ -284,95 +258,38 @@ export function ApiKeyGeneratorFull({ accountIndex, network, onApiKeyGenerated }
               </AlertDescription>
             </Alert>
 
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Do you have an existing L2 API key for this account?
-              </p>
-              <div className="grid grid-cols-2 gap-3">
-                <Button
-                  onClick={() => setSetupMode('new')}
-                  variant={setupMode === 'new' ? 'default' : 'outline'}
-                  className="w-full"
-                >
-                  No, first time setup
-                </Button>
-                <Button
-                  onClick={() => setSetupMode('existing')}
-                  variant={setupMode === 'existing' ? 'default' : 'outline'}
-                  className="w-full"
-                >
-                  Yes, I have a key
-                </Button>
+            <div className="space-y-3">
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  A cryptographically secure random key will be generated for initial setup. This ensures maximum security for your account. Save all generated keys securely.
+                </AlertDescription>
+              </Alert>
+              <div>
+                <Label htmlFor="target-key-index">Target API Key Index (1-255)</Label>
+                <Input
+                  id="target-key-index"
+                  type="number"
+                  value={targetKeyIndex}
+                  onChange={(e) => setTargetKeyIndex(e.target.value)}
+                  min="1"
+                  max="255"
+                  className="mt-1"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Index 0 is reserved for frontend. Use 1 or higher for API access.
+                </p>
               </div>
-            </div>
-
-            {setupMode === 'new' && (
-              <div className="space-y-3">
-                <Alert>
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>
-                    A cryptographically secure random key will be generated for initial setup. This ensures maximum security for your account. Save all generated keys securely.
-                  </AlertDescription>
-                </Alert>
-                <div>
-                  <Label htmlFor="target-key-index">Target API Key Index (1-255)</Label>
-                  <Input
-                    id="target-key-index"
-                    type="number"
-                    value={targetKeyIndex}
-                    onChange={(e) => setTargetKeyIndex(e.target.value)}
-                    min="1"
-                    max="255"
-                    className="mt-1"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Index 0 is reserved for frontend. Use 1 or higher for API access.
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {setupMode === 'existing' && (
-              <div className="space-y-3">
-                <div>
-                  <Label htmlFor="current-key">Current L2 Private Key</Label>
-                  <Input
-                    id="current-key"
-                    type="password"
-                    value={currentL2Key}
-                    onChange={(e) => setCurrentL2Key(e.target.value)}
-                    placeholder="0x..."
-                    className="mt-1 font-mono"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Enter 40 bytes (80 hex characters) with or without 0x prefix
-                  </p>
-                </div>
-                <div>
-                  <Label htmlFor="current-key-index">Current Key Index</Label>
-                  <Input
-                    id="current-key-index"
-                    type="number"
-                    value={currentKeyIndex}
-                    onChange={(e) => setCurrentKeyIndex(e.target.value)}
-                    min="0"
-                    max="255"
-                    className="mt-1"
-                  />
-                </div>
-              </div>
-            )}
-
-            {setupMode && (
+              
               <Button
                 onClick={handleSetupComplete}
-                disabled={loading || (setupMode === 'existing' && !currentL2Key)}
+                disabled={loading}
                 className="w-full"
               >
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Continue
               </Button>
-            )}
+            </div>
           </div>
         )}
 
@@ -390,23 +307,6 @@ export function ApiKeyGeneratorFull({ accountIndex, network, onApiKeyGenerated }
               </div>
             </div>
 
-            {setupMode === 'existing' && (
-              <div>
-                <Label htmlFor="new-key-index">Target API Key Index (1-255)</Label>
-                <Input
-                  id="new-key-index"
-                  type="number"
-                  value={targetKeyIndex}
-                  onChange={(e) => setTargetKeyIndex(e.target.value)}
-                  min="1"
-                  max="255"
-                  className="mt-1"
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Index 0 is reserved for frontend. Use 1 or higher for API access.
-                </p>
-              </div>
-            )}
 
             <div className="flex items-center justify-between rounded-lg bg-muted p-3">
               <span className="text-sm">Target Key Index</span>
