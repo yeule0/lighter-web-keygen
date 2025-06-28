@@ -2,6 +2,8 @@
 
 A browser-based tool for generating API keys for the Lighter DEX without exposing private keys.
 
+**Live Application**: [https://lighterkey.netlify.app/](https://lighterkey.netlify.app/)
+
 ## Overview
 
 This application allows users to generate and register Layer 2 API keys for Lighter DEX directly in their browser. Instead of pasting private keys into Python scripts, users can securely connect their wallets and manage API keys through a web interface.
