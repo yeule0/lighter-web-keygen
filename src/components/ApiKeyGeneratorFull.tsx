@@ -19,6 +19,7 @@ import {
   Shield,
   Copy
 } from 'lucide-react'
+import { TransactionConfirmDialog } from './TransactionConfirmDialog'
 
 interface ApiKeyGeneratorFullProps {
   address: string
@@ -45,6 +46,7 @@ export function ApiKeyGeneratorFull({ accountIndex, network, onApiKeyGenerated }
   
   const [targetKeyIndex, setTargetKeyIndex] = useState('1')
   const [generatedKeys, setGeneratedKeys] = useState<{ privateKey: string; publicKey: string } | null>(null)
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
   
   const { signMessageAsync } = useSignMessage()
   const { chain } = useAccount()
@@ -126,6 +128,13 @@ export function ApiKeyGeneratorFull({ accountIndex, network, onApiKeyGenerated }
   const handleSignAndSubmit = async () => {
     if (!generatedKeys) return
     
+    setShowConfirmDialog(true)
+  }
+  
+  const handleConfirmedSign = async () => {
+    if (!generatedKeys) return
+    
+    setShowConfirmDialog(false)
     setLoading(true)
     setError(null)
     setInfo('Creating transaction with L2 signature...')
@@ -248,7 +257,8 @@ export function ApiKeyGeneratorFull({ accountIndex, network, onApiKeyGenerated }
   }
 
   return (
-    <Card>
+    <>
+      <Card>
       <CardHeader className="p-6 sm:p-8 pb-4 sm:pb-6">
         <div className="space-y-2">
           <CardTitle className="flex items-center gap-2.5 text-xl sm:text-2xl font-semibold">
@@ -511,6 +521,20 @@ export function ApiKeyGeneratorFull({ accountIndex, network, onApiKeyGenerated }
           </Alert>
         )}
       </CardContent>
-    </Card>
+      </Card>
+      
+      <TransactionConfirmDialog
+      open={showConfirmDialog}
+      onConfirm={handleConfirmedSign}
+      onCancel={() => setShowConfirmDialog(false)}
+      details={{
+        action: 'Change API Key',
+        network: network,
+        accountIndex: accountIndex,
+        newPublicKey: generatedKeys?.publicKey || '',
+        targetKeyIndex: targetKeyIndex
+      }}
+    />
+    </>
   )
 }

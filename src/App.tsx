@@ -9,6 +9,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Toaster } from '@/components/ui/toaster'
 import { Sparkles } from 'lucide-react'
 import { ConnectKitWrapper } from './components/ConnectKitWrapper'
+import { DomainWarning } from './components/DomainWarning'
 
 function App() {
   const { address, isConnected } = useAccount()
@@ -24,8 +25,9 @@ function App() {
 
   return (
     <ThemeProvider defaultTheme="dark" storageKey="lighter-theme">
+      <DomainWarning />
       <ConnectKitWrapper>
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen bg-background flex flex-col">
         <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex h-14 sm:h-16 items-center justify-between">
@@ -117,7 +119,7 @@ function App() {
                           
                           <div className="rounded-lg bg-yellow-500/10 border border-yellow-500/20 p-3">
                             <p className="text-xs sm:text-sm text-yellow-600 dark:text-yellow-400">
-                              ⚠️ Save this configuration securely. The private key will not be shown again!
+                              Save this configuration securely. The private key will not be shown again!
                             </p>
                           </div>
                         </div>
