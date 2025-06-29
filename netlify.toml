@@ -1,9 +1,6 @@
 [build]
-  command = "npm run build"
+  command = "VITE_COMMIT_SHA=$COMMIT_REF npm run build"
   publish = "dist"
-
-[build.environment]
-  VITE_COMMIT_SHA = "$COMMIT_REF"
 
 [[headers]]
   for = "/*.wasm"
