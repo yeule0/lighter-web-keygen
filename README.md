@@ -1,5 +1,7 @@
 # Lighter Web API Key Generator
 
+[![Netlify Status](https://api.netlify.com/api/v1/badges/c1bdc65e-8f2d-4ba6-82f0-d2f4039fd2d7/deploy-status)](https://app.netlify.com/sites/lighterkey/deploys)
+
 A browser-based tool for generating API keys for the Lighter DEX without exposing private keys.
 
 **Live Application**: [https://lighterkey.netlify.app/](https://lighterkey.netlify.app/)

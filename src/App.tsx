@@ -295,6 +295,19 @@ function App() {
                 </div>
               </div>
             </div>
+            {import.meta.env.VITE_COMMIT_SHA && (
+              <div className="mt-3 text-xs text-muted-foreground/60">
+                Deployed from{' '}
+                <a 
+                  href={`https://github.com/yeule0/lighter-web-keygen/commit/${import.meta.env.VITE_COMMIT_SHA}`}
+                  className="font-mono underline underline-offset-2 hover:text-muted-foreground transition-colors"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {import.meta.env.VITE_COMMIT_SHA.slice(0, 7)}
+                </a>
+              </div>
+            )}
           </div>
         </footer>
         </div>
