@@ -203,9 +203,6 @@ export function AccountCheck({ address, onAccountFound, onNetworkChange }: Accou
                       'No public key'}
                   </div>
                 </div>
-                <Badge variant="outline" className="text-xs">
-                  Nonce: {accounts[0].nonce}
-                </Badge>
               </div>
             ) : (
               <div className="space-y-2">
@@ -235,9 +232,6 @@ export function AccountCheck({ address, onAccountFound, onNetworkChange }: Accou
                             'No public key'}
                         </div>
                       </div>
-                      <Badge variant="outline" className="text-xs">
-                        Nonce: {account.nonce}
-                      </Badge>
                     </div>
                   </div>
                 ))}
