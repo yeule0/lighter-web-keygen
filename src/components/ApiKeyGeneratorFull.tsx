@@ -232,15 +232,15 @@ export function ApiKeyGeneratorFull({ accountIndex, network, onApiKeyGenerated }
 
   return (
     <>
-      <Card>
+      <Card className="card-hover shadow-glow animate-slide-up" style={{ animationDelay: '100ms' }}>
       <CardHeader className="p-6 sm:p-8 pb-4 sm:pb-6">
         <div className="space-y-2">
           <CardTitle className="flex items-center gap-2.5 text-xl sm:text-2xl font-semibold">
-            <div className="p-2 rounded-lg bg-primary/10">
+            <div className="p-2 rounded-lg bg-primary/10 transition-all duration-300 hover:bg-primary/20">
               <Key className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
             </div>
             Generate API Key
-            <Badge variant="secondary" className="ml-auto text-xs">Full Crypto</Badge>
+            <Badge variant="secondary" className="ml-auto text-xs bg-primary/10 border-primary/20">Full Crypto</Badge>
           </CardTitle>
           <CardDescription className="text-sm sm:text-base text-muted-foreground">
             Using Goldilocks field arithmetic, Poseidon2 hashing, and Schnorr signatures

@@ -86,7 +86,7 @@ function App() {
                 </div>
               </div>
               {isConnected && address && (
-                <div className="w-full max-w-4xl mx-auto space-y-6 sm:space-y-8 animate-in">
+                <div className="w-full max-w-4xl mx-auto space-y-6 sm:space-y-8">
                 <AccountCheck 
                   address={address} 
                   onAccountFound={setAccountIndex}
@@ -106,11 +106,13 @@ function App() {
                 )}
                 
                   {apiKeyData && (
-                    <Card className="border border-green-500/20 shadow-lg">
+                    <Card className="border border-green-500/20 shadow-glow-primary card-hover animate-slide-up">
                       <CardContent className="p-4 sm:p-6">
                         <div className="space-y-4 sm:space-y-6">
                           <div className="flex items-start gap-2 sm:gap-3">
-                            <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-0.5 shrink-0" />
+                            <div className="p-2 rounded-lg bg-green-500/10 animate-in-scale">
+                              <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-green-500" />
+                            </div>
                             <div className="min-w-0">
                               <h3 className="text-base sm:text-lg font-semibold">
                                 API Key Generated Successfully
@@ -133,12 +135,12 @@ function App() {
                                   value={apiKeyData.network === 'mainnet' 
                                     ? 'https://mainnet.zklighter.elliot.ai' 
                                     : 'https://testnet.zklighter.elliot.ai'}
-                                  className="flex-1 bg-muted/50 rounded-md px-2 sm:px-3 py-2 text-xs sm:text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring overflow-hidden text-ellipsis"
+                                  className="flex-1 bg-muted/50 rounded-md px-2 sm:px-3 py-2 text-xs sm:text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring overflow-hidden text-ellipsis transition-all duration-200 hover:bg-muted/70"
                                 />
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="shrink-0"
+                                  className="shrink-0 transition-all duration-200 hover:scale-110"
                                   onClick={() => copyToClipboard(
                                     apiKeyData.network === 'mainnet' 
                                       ? 'https://mainnet.zklighter.elliot.ai' 

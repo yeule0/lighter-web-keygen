@@ -4,7 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { AlertCircle, Wallet, Globe } from 'lucide-react'
+import { AlertCircle, Wallet, Globe, User, Users, Check } from 'lucide-react'
 
 interface AccountInfo {
   index: number
@@ -117,11 +117,11 @@ export function AccountCheck({ address, onAccountFound, onNetworkChange }: Accou
   }
 
   return (
-    <Card>
+    <Card className="card-hover shadow-glow animate-slide-up">
       <CardHeader className="p-6 sm:p-8 pb-4 sm:pb-6">
         <div className="space-y-2">
           <CardTitle className="flex items-center gap-2.5 text-xl sm:text-2xl font-semibold">
-            <div className="p-2 rounded-lg bg-primary/10">
+            <div className="p-2 rounded-lg bg-primary/10 transition-all duration-300 hover:bg-primary/20">
               <Wallet className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
             </div>
             Account Selection
@@ -136,26 +136,30 @@ export function AccountCheck({ address, onAccountFound, onNetworkChange }: Accou
         <div className="space-y-3">
           <label className="text-sm font-medium text-foreground/80">Select Network</label>
           <Select value={selectedNetwork} onValueChange={handleNetworkChange}>
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="w-full transition-all duration-200 hover:border-primary/50">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="testnet">
                 <div className="flex items-center justify-between w-full">
                   <div className="flex items-center gap-2">
-                    <Globe className="h-4 w-4" />
-                    <span>Testnet</span>
+                    <div className="p-1 rounded bg-amber-500/10">
+                      <Globe className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                    </div>
+                    <span className="font-medium">Testnet</span>
                   </div>
-                  <Badge variant="outline" className="ml-auto text-xs">Chain ID: 300</Badge>
+                  <Badge variant="outline" className="ml-auto text-xs bg-amber-500/10 border-amber-500/20">Chain ID: 300</Badge>
                 </div>
               </SelectItem>
               <SelectItem value="mainnet">
                 <div className="flex items-center justify-between w-full">
                   <div className="flex items-center gap-2">
-                    <Globe className="h-4 w-4" />
-                    <span>Mainnet</span>
+                    <div className="p-1 rounded bg-green-500/10">
+                      <Globe className="h-4 w-4 text-green-600 dark:text-green-400" />
+                    </div>
+                    <span className="font-medium">Mainnet</span>
                   </div>
-                  <Badge variant="outline" className="ml-auto text-xs">Chain ID: 304</Badge>
+                  <Badge variant="outline" className="ml-auto text-xs bg-green-500/10 border-green-500/20">Chain ID: 304</Badge>
                 </div>
               </SelectItem>
             </SelectContent>
@@ -189,26 +193,42 @@ export function AccountCheck({ address, onAccountFound, onNetworkChange }: Accou
             </div>
             
             {accounts.length === 1 ? (
-              <div className="flex items-center justify-between rounded-lg border p-3">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">
-                      {accounts[0].index > 1000000 ? 'Sub-Account' : 'Main Account'} #{accounts[0].index}
-                    </span>
-                    <Badge className="bg-green-500/10 text-green-600 dark:text-green-400">
-                      Active
-                    </Badge>
-                  </div>
-                  <div className="text-xs text-muted-foreground font-mono">
-                    {accounts[0].l2PublicKey ? 
-                      `${accounts[0].l2PublicKey.slice(0, 16)}...${accounts[0].l2PublicKey.slice(-8)}` :
-                      'No public key'}
+              <div className="relative rounded-lg border p-4 transition-all duration-200 hover:border-primary/50 shadow-sm hover:shadow-md">
+                <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-primary/0 rounded-lg" />
+                <div className="relative space-y-2">
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg transition-all duration-300 ${
+                      accounts[0].index > 1000000 ? 'bg-purple-500/10' : 'bg-blue-500/10'
+                    }`}>
+                      {accounts[0].index > 1000000 ? (
+                        <Users className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                      ) : (
+                        <User className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-base">
+                          {accounts[0].index > 1000000 ? 'Sub-Account' : 'Main Account'}
+                        </span>
+                        <span className="text-sm text-muted-foreground">#{accounts[0].index}</span>
+                        <Badge className="bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20">
+                          <Check className="h-3 w-3 mr-1" />
+                          Active
+                        </Badge>
+                      </div>
+                      <div className="text-xs text-muted-foreground font-mono mt-1">
+                        {accounts[0].l2PublicKey ? 
+                          `${accounts[0].l2PublicKey.slice(0, 16)}...${accounts[0].l2PublicKey.slice(-8)}` :
+                          'No public key'}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             ) : (
               <div className="space-y-2">
-                {accounts.map((account) => {
+                {accounts.map((account, index) => {
                   // Check if it's a sub-account based on the large index value
                   const isSubAccount = account.index > 1000000;
                   const accountLabel = isSubAccount ? 'Sub-Account' : 'Main Account';
@@ -217,23 +237,35 @@ export function AccountCheck({ address, onAccountFound, onNetworkChange }: Accou
                     <div
                       key={account.index}
                       onClick={() => handleAccountSelect(account.index)}
-                      className={`relative rounded-lg border p-3 cursor-pointer transition-all ${
+                      className={`relative rounded-lg border-2 p-4 cursor-pointer transition-all duration-200 transform hover:scale-[1.02] ${
                         selectedAccountIndex === account.index
-                          ? 'border-primary bg-accent'
-                          : 'border-border hover:border-primary/50'
+                          ? 'border-primary bg-primary/5 shadow-lg'
+                          : 'border-border hover:border-primary/50 hover:shadow-md'
                       }`}
+                      style={{ animationDelay: `${index * 100}ms` }}
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-1">
+                      <div className="relative flex items-center gap-3">
+                        <div className={`p-2 rounded-lg transition-all duration-300 ${
+                          isSubAccount ? 'bg-purple-500/10' : 'bg-blue-500/10'
+                        } ${selectedAccountIndex === account.index ? 'scale-110' : ''}`}>
+                          {isSubAccount ? (
+                            <Users className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                          ) : (
+                            <User className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                          )}
+                        </div>
+                        <div className="flex-1">
                           <div className="flex items-center gap-2">
-                            <span className="font-medium">{accountLabel} #{account.index}</span>
+                            <span className="font-semibold text-base">{accountLabel}</span>
+                            <span className="text-sm text-muted-foreground">#{account.index}</span>
                             {selectedAccountIndex === account.index && (
-                              <Badge className="bg-green-500/10 text-green-600 dark:text-green-400">
+                              <Badge className="bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20 animate-in-scale">
+                                <Check className="h-3 w-3 mr-1" />
                                 Selected
                               </Badge>
                             )}
                           </div>
-                          <div className="text-xs text-muted-foreground font-mono">
+                          <div className="text-xs text-muted-foreground font-mono mt-1">
                             {account.l2PublicKey ? 
                               `${account.l2PublicKey.slice(0, 16)}...${account.l2PublicKey.slice(-8)}` :
                               'No public key'}

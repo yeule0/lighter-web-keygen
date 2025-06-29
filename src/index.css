@@ -139,6 +139,7 @@ body {
   overflow-x: hidden;
 }
 
+/* Animations */
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -161,11 +162,86 @@ body {
   }
 }
 
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-border {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
 .animate-in {
   animation: fade-in 0.5s ease-out;
 }
 
 .animate-in-scale {
   animation: fade-in-scale 0.3s ease-out;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Card hover effects */
+.card-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+}
+
+/* Enhanced shadows */
+.shadow-glow {
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.03),
+              0 2px 4px rgba(0, 0, 0, 0.04),
+              0 12px 24px -4px rgba(0, 0, 0, 0.08);
+}
+
+.dark .shadow-glow {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.03),
+              0 2px 4px rgba(255, 255, 255, 0.04),
+              0 12px 24px -4px rgba(255, 255, 255, 0.08);
+}
+
+.shadow-glow-primary {
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.03),
+              0 2px 4px rgba(0, 0, 0, 0.04),
+              0 12px 24px -4px rgba(0, 0, 0, 0.08),
+              0 0 32px -8px rgba(0, 0, 0, 0.1);
+}
+
+.dark .shadow-glow-primary {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.03),
+              0 2px 4px rgba(255, 255, 255, 0.04),
+              0 12px 24px -4px rgba(255, 255, 255, 0.08),
+              0 0 32px -8px rgba(255, 255, 255, 0.1);
+}
+
+/* Gradient border animations */
+@keyframes gradient-rotate {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 100% 50%;
+  }
+}
+
+.gradient-border-animated::before {
+  background-size: 200% 200%;
+  animation: gradient-rotate 3s ease infinite;
 }
 
