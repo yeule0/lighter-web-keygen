@@ -9,7 +9,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Toaster } from '@/components/ui/toaster'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/hooks/use-toast'
-import { Sparkles, Copy, CheckCircle2, AlertTriangle, Link, Key, Hash, Layers } from 'lucide-react'
+import { Sparkles, Copy, CheckCircle2, AlertTriangle, Link, Key, Hash, Layers, Eye, EyeOff } from 'lucide-react'
 import { ConnectKitWrapper } from './components/ConnectKitWrapper'
 import { DomainWarning } from './components/DomainWarning'
 
@@ -18,6 +18,7 @@ function App() {
   const { toast } = useToast()
   const [accountIndex, setAccountIndex] = useState<number | null>(null)
   const [selectedNetwork, setSelectedNetwork] = useState<'mainnet' | 'testnet'>('testnet')
+  const [showPrivateKey, setShowPrivateKey] = useState(false)
   const [apiKeyData, setApiKeyData] = useState<{
     privateKey: string
     publicKey: string
@@ -88,7 +89,10 @@ function App() {
                     address={address} 
                     accountIndex={accountIndex}
                     network={selectedNetwork}
-                    onApiKeyGenerated={setApiKeyData}
+                    onApiKeyGenerated={(data) => {
+                      setApiKeyData(data)
+                      setShowPrivateKey(false)
+                    }}
                   />
                 )}
                 
@@ -143,17 +147,33 @@ function App() {
                                     <p className="text-sm font-medium text-muted-foreground">Private Key</p>
                                   </div>
                                   <p className="font-mono text-xs break-all pl-6 text-muted-foreground">
-                                    {apiKeyData.privateKey}
+                                    {showPrivateKey 
+                                      ? apiKeyData.privateKey 
+                                      : '••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••'}
                                   </p>
                                 </div>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="opacity-0 group-hover:opacity-100 transition-opacity ml-2 shrink-0"
-                                  onClick={() => copyToClipboard(apiKeyData.privateKey, 'Private Key')}
-                                >
-                                  <Copy className="h-4 w-4" />
-                                </Button>
+                                <div className="flex items-center gap-1 ml-2 shrink-0">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8"
+                                    onClick={() => setShowPrivateKey(!showPrivateKey)}
+                                  >
+                                    {showPrivateKey ? (
+                                      <EyeOff className="h-4 w-4" />
+                                    ) : (
+                                      <Eye className="h-4 w-4" />
+                                    )}
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                    onClick={() => copyToClipboard(apiKeyData.privateKey, 'Private Key')}
+                                  >
+                                    <Copy className="h-4 w-4" />
+                                  </Button>
+                                </div>
                               </div>
                             </div>
                             
