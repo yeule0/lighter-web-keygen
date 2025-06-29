@@ -97,36 +97,38 @@ function App() {
                 )}
                 
                   {apiKeyData && (
-                    <Card className="border-green-500/20 bg-gradient-to-br from-green-500/5 to-green-500/10">
+                    <Card className="border-2 border-green-500/20 shadow-xl">
                       <CardContent className="p-6 sm:p-8">
                         <div className="space-y-6">
-                          <div className="flex items-center gap-3">
-                            <div className="p-3 rounded-full bg-green-500/10">
-                              <CheckCircle2 className="h-5 w-5 text-green-500" />
+                          <div className="flex items-start gap-3">
+                            <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5" />
+                            <div>
+                              <h3 className="text-lg font-semibold">
+                                API Key Generated Successfully
+                              </h3>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                Your API key has been created for {apiKeyData.network}
+                              </p>
                             </div>
-                            <h3 className="text-xl sm:text-2xl font-semibold">
-                              API Key Successfully Generated
-                            </h3>
                           </div>
                           
-                          <div className="space-y-3">
-                            <div className="group relative rounded-lg border bg-card p-4 transition-all hover:shadow-sm">
-                              <div className="flex items-center justify-between">
-                                <div className="space-y-1">
-                                  <div className="flex items-center gap-2">
-                                    <Link className="h-4 w-4 text-muted-foreground" />
-                                    <p className="text-sm font-medium text-muted-foreground">Base URL</p>
-                                  </div>
-                                  <p className="font-mono text-sm break-all pl-6">
-                                    {apiKeyData.network === 'mainnet' 
-                                      ? 'https://mainnet.zklighter.elliot.ai' 
-                                      : 'https://testnet.zklighter.elliot.ai'}
-                                  </p>
-                                </div>
+                          <div className="space-y-4">
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <Link className="h-3.5 w-3.5" />
+                                <span>Base URL</span>
+                              </div>
+                              <div className="group relative flex items-center gap-2">
+                                <input
+                                  readOnly
+                                  value={apiKeyData.network === 'mainnet' 
+                                    ? 'https://mainnet.zklighter.elliot.ai' 
+                                    : 'https://testnet.zklighter.elliot.ai'}
+                                  className="flex-1 bg-muted/50 rounded-md px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring"
+                                />
                                 <Button
                                   variant="ghost"
-                                  size="icon"
-                                  className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                  size="sm"
                                   onClick={() => copyToClipboard(
                                     apiKeyData.network === 'mainnet' 
                                       ? 'https://mainnet.zklighter.elliot.ai' 
@@ -134,105 +136,98 @@ function App() {
                                     'Base URL'
                                   )}
                                 >
-                                  <Copy className="h-4 w-4" />
+                                  <Copy className="h-3.5 w-3.5" />
                                 </Button>
                               </div>
                             </div>
                             
-                            <div className="group relative rounded-lg border bg-card p-4 transition-all hover:shadow-sm">
-                              <div className="flex items-center justify-between">
-                                <div className="space-y-1 flex-1 min-w-0">
-                                  <div className="flex items-center gap-2">
-                                    <Key className="h-4 w-4 text-muted-foreground" />
-                                    <p className="text-sm font-medium text-muted-foreground">Private Key</p>
-                                  </div>
-                                  <p className="font-mono text-xs break-all pl-6 text-muted-foreground">
-                                    {showPrivateKey 
-                                      ? apiKeyData.privateKey 
-                                      : '••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••'}
-                                  </p>
-                                </div>
-                                <div className="flex items-center gap-1 ml-2 shrink-0">
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8"
-                                    onClick={() => setShowPrivateKey(!showPrivateKey)}
-                                  >
-                                    {showPrivateKey ? (
-                                      <EyeOff className="h-4 w-4" />
-                                    ) : (
-                                      <Eye className="h-4 w-4" />
-                                    )}
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="opacity-0 group-hover:opacity-100 transition-opacity"
-                                    onClick={() => copyToClipboard(apiKeyData.privateKey, 'Private Key')}
-                                  >
-                                    <Copy className="h-4 w-4" />
-                                  </Button>
-                                </div>
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <Key className="h-3.5 w-3.5" />
+                                <span>Private Key</span>
+                              </div>
+                              <div className="group relative flex items-center gap-2">
+                                <input
+                                  readOnly
+                                  type={showPrivateKey ? "text" : "password"}
+                                  value={apiKeyData.privateKey}
+                                  className="flex-1 bg-muted/50 rounded-md px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring"
+                                />
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setShowPrivateKey(!showPrivateKey)}
+                                >
+                                  {showPrivateKey ? (
+                                    <EyeOff className="h-3.5 w-3.5" />
+                                  ) : (
+                                    <Eye className="h-3.5 w-3.5" />
+                                  )}
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => copyToClipboard(apiKeyData.privateKey, 'Private Key')}
+                                >
+                                  <Copy className="h-3.5 w-3.5" />
+                                </Button>
                               </div>
                             </div>
                             
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                              <div className="group relative rounded-lg border bg-card p-4 transition-all hover:shadow-sm">
-                                <div className="flex items-center justify-between">
-                                  <div className="space-y-1">
-                                    <div className="flex items-center gap-2">
-                                      <Hash className="h-4 w-4 text-muted-foreground" />
-                                      <p className="text-sm font-medium text-muted-foreground">Account Index</p>
-                                    </div>
-                                    <p className="font-mono text-sm pl-6">
-                                      {apiKeyData.accountIndex}
-                                    </p>
-                                  </div>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                  <Hash className="h-3.5 w-3.5" />
+                                  <span>Account Index</span>
+                                </div>
+                                <div className="group relative flex items-center gap-2">
+                                  <input
+                                    readOnly
+                                    value={apiKeyData.accountIndex}
+                                    className="flex-1 bg-muted/50 rounded-md px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring"
+                                  />
                                   <Button
                                     variant="ghost"
-                                    size="icon"
-                                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                    size="sm"
                                     onClick={() => copyToClipboard(apiKeyData.accountIndex.toString(), 'Account Index')}
                                   >
-                                    <Copy className="h-4 w-4" />
+                                    <Copy className="h-3.5 w-3.5" />
                                   </Button>
                                 </div>
                               </div>
                               
-                              <div className="group relative rounded-lg border bg-card p-4 transition-all hover:shadow-sm">
-                                <div className="flex items-center justify-between">
-                                  <div className="space-y-1">
-                                    <div className="flex items-center gap-2">
-                                      <Layers className="h-4 w-4 text-muted-foreground" />
-                                      <p className="text-sm font-medium text-muted-foreground">API Key Index</p>
-                                    </div>
-                                    <p className="font-mono text-sm pl-6">
-                                      {apiKeyData.apiKeyIndex}
-                                    </p>
-                                  </div>
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                  <Layers className="h-3.5 w-3.5" />
+                                  <span>API Key Index</span>
+                                </div>
+                                <div className="group relative flex items-center gap-2">
+                                  <input
+                                    readOnly
+                                    value={apiKeyData.apiKeyIndex}
+                                    className="flex-1 bg-muted/50 rounded-md px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring"
+                                  />
                                   <Button
                                     variant="ghost"
-                                    size="icon"
-                                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                    size="sm"
                                     onClick={() => copyToClipboard(apiKeyData.apiKeyIndex.toString(), 'API Key Index')}
                                   >
-                                    <Copy className="h-4 w-4" />
+                                    <Copy className="h-3.5 w-3.5" />
                                   </Button>
                                 </div>
                               </div>
                             </div>
                           </div>
                           
-                          <div className="flex items-start gap-3 rounded-lg bg-amber-500/10 border border-amber-500/20 p-4">
-                            <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
-                            <div className="space-y-1">
-                              <p className="text-sm font-medium text-amber-600 dark:text-amber-400">
-                                Important Security Notice
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                Save this configuration securely. The private key will not be shown again and cannot be recovered if lost.
-                              </p>
+                          <div className="mt-6 p-4 rounded-lg bg-amber-500/5 border border-amber-500/20">
+                            <div className="flex gap-3">
+                              <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+                              <div className="space-y-1 text-sm">
+                                <p className="font-medium">Security Notice</p>
+                                <p className="text-muted-foreground">
+                                  Save this configuration securely. The private key cannot be recovered if lost.
+                                </p>
+                              </div>
                             </div>
                           </div>
                         </div>
