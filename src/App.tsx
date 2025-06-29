@@ -97,16 +97,16 @@ function App() {
                 )}
                 
                   {apiKeyData && (
-                    <Card className="border-2 border-green-500/20 shadow-xl">
-                      <CardContent className="p-6 sm:p-8">
-                        <div className="space-y-6">
-                          <div className="flex items-start gap-3">
-                            <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5" />
-                            <div>
-                              <h3 className="text-lg font-semibold">
+                    <Card className="border border-green-500/20 shadow-lg">
+                      <CardContent className="p-4 sm:p-6">
+                        <div className="space-y-4 sm:space-y-6">
+                          <div className="flex items-start gap-2 sm:gap-3">
+                            <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-0.5 shrink-0" />
+                            <div className="min-w-0">
+                              <h3 className="text-base sm:text-lg font-semibold">
                                 API Key Generated Successfully
                               </h3>
-                              <p className="text-sm text-muted-foreground mt-1">
+                              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">
                                 Your API key has been created for {apiKeyData.network}
                               </p>
                             </div>
@@ -124,11 +124,12 @@ function App() {
                                   value={apiKeyData.network === 'mainnet' 
                                     ? 'https://mainnet.zklighter.elliot.ai' 
                                     : 'https://testnet.zklighter.elliot.ai'}
-                                  className="flex-1 bg-muted/50 rounded-md px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring"
+                                  className="flex-1 bg-muted/50 rounded-md px-2 sm:px-3 py-2 text-xs sm:text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring overflow-hidden text-ellipsis"
                                 />
                                 <Button
                                   variant="ghost"
                                   size="sm"
+                                  className="shrink-0"
                                   onClick={() => copyToClipboard(
                                     apiKeyData.network === 'mainnet' 
                                       ? 'https://mainnet.zklighter.elliot.ai' 
@@ -151,11 +152,12 @@ function App() {
                                   readOnly
                                   type={showPrivateKey ? "text" : "password"}
                                   value={apiKeyData.privateKey}
-                                  className="flex-1 bg-muted/50 rounded-md px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring"
+                                  className="flex-1 bg-muted/50 rounded-md px-2 sm:px-3 py-2 text-xs sm:text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring overflow-hidden text-ellipsis"
                                 />
                                 <Button
                                   variant="ghost"
                                   size="sm"
+                                  className="shrink-0"
                                   onClick={() => setShowPrivateKey(!showPrivateKey)}
                                 >
                                   {showPrivateKey ? (
@@ -167,6 +169,7 @@ function App() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
+                                  className="shrink-0"
                                   onClick={() => copyToClipboard(apiKeyData.privateKey, 'Private Key')}
                                 >
                                   <Copy className="h-3.5 w-3.5" />
@@ -174,7 +177,7 @@ function App() {
                               </div>
                             </div>
                             
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                               <div className="space-y-2">
                                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                   <Hash className="h-3.5 w-3.5" />
@@ -184,7 +187,7 @@ function App() {
                                   <input
                                     readOnly
                                     value={apiKeyData.accountIndex}
-                                    className="flex-1 bg-muted/50 rounded-md px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring"
+                                    className="flex-1 bg-muted/50 rounded-md px-2 sm:px-3 py-2 text-xs sm:text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring overflow-hidden text-ellipsis"
                                   />
                                   <Button
                                     variant="ghost"
@@ -205,7 +208,7 @@ function App() {
                                   <input
                                     readOnly
                                     value={apiKeyData.apiKeyIndex}
-                                    className="flex-1 bg-muted/50 rounded-md px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring"
+                                    className="flex-1 bg-muted/50 rounded-md px-2 sm:px-3 py-2 text-xs sm:text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring overflow-hidden text-ellipsis"
                                   />
                                   <Button
                                     variant="ghost"
@@ -219,12 +222,12 @@ function App() {
                             </div>
                           </div>
                           
-                          <div className="mt-6 p-4 rounded-lg bg-amber-500/5 border border-amber-500/20">
+                          <div className="mt-4 sm:mt-6 p-3 sm:p-4 rounded-lg bg-amber-500/5 border border-amber-500/20">
                             <div className="flex gap-3">
                               <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
-                              <div className="space-y-1 text-sm">
+                              <div className="space-y-1 text-xs sm:text-sm">
                                 <p className="font-medium">Security Notice</p>
-                                <p className="text-muted-foreground">
+                                <p className="text-muted-foreground leading-relaxed">
                                   Save this configuration securely. The private key cannot be recovered if lost.
                                 </p>
                               </div>
