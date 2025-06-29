@@ -36,6 +36,12 @@ function App() {
     }
   }, [isConnected])
   
+  // Clear API key data when network changes
+  useEffect(() => {
+    setApiKeyData(null)
+    setShowPrivateKey(false)
+  }, [selectedNetwork])
+  
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text)
     toast({
