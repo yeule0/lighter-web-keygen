@@ -192,7 +192,9 @@ export function AccountCheck({ address, onAccountFound, onNetworkChange }: Accou
               <div className="flex items-center justify-between rounded-lg border p-3">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium">Account #{accounts[0].index}</span>
+                    <span className="font-medium">
+                      {accounts[0].index > 1000000 ? 'Sub-Account' : 'Main Account'} #{accounts[0].index}
+                    </span>
                     <Badge className="bg-green-500/10 text-green-600 dark:text-green-400">
                       Active
                     </Badge>
@@ -206,35 +208,41 @@ export function AccountCheck({ address, onAccountFound, onNetworkChange }: Accou
               </div>
             ) : (
               <div className="space-y-2">
-                {accounts.map((account) => (
-                  <div
-                    key={account.index}
-                    onClick={() => handleAccountSelect(account.index)}
-                    className={`relative rounded-lg border p-3 cursor-pointer transition-all ${
-                      selectedAccountIndex === account.index
-                        ? 'border-primary bg-accent'
-                        : 'border-border hover:border-primary/50'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">Account #{account.index}</span>
-                          {selectedAccountIndex === account.index && (
-                            <Badge className="bg-green-500/10 text-green-600 dark:text-green-400">
-                              Selected
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="text-xs text-muted-foreground font-mono">
-                          {account.l2PublicKey ? 
-                            `${account.l2PublicKey.slice(0, 16)}...${account.l2PublicKey.slice(-8)}` :
-                            'No public key'}
+                {accounts.map((account) => {
+                  // Check if it's a sub-account based on the large index value
+                  const isSubAccount = account.index > 1000000;
+                  const accountLabel = isSubAccount ? 'Sub-Account' : 'Main Account';
+                  
+                  return (
+                    <div
+                      key={account.index}
+                      onClick={() => handleAccountSelect(account.index)}
+                      className={`relative rounded-lg border p-3 cursor-pointer transition-all ${
+                        selectedAccountIndex === account.index
+                          ? 'border-primary bg-accent'
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{accountLabel} #{account.index}</span>
+                            {selectedAccountIndex === account.index && (
+                              <Badge className="bg-green-500/10 text-green-600 dark:text-green-400">
+                                Selected
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="text-xs text-muted-foreground font-mono">
+                            {account.l2PublicKey ? 
+                              `${account.l2PublicKey.slice(0, 16)}...${account.l2PublicKey.slice(-8)}` :
+                              'No public key'}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
