@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ConnectKitButton } from 'connectkit'
 import { useAccount } from 'wagmi'
 import { ApiKeyGeneratorFull } from './components/ApiKeyGeneratorFull'
@@ -26,6 +26,15 @@ function App() {
     apiKeyIndex: number
     network: 'mainnet' | 'testnet'
   } | null>(null)
+  
+  // Clear state when wallet disconnects
+  useEffect(() => {
+    if (!isConnected) {
+      setAccountIndex(null)
+      setApiKeyData(null)
+      setShowPrivateKey(false)
+    }
+  }, [isConnected])
   
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text)
