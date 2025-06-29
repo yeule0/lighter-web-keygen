@@ -259,16 +259,31 @@ function App() {
               </p>
               
               {import.meta.env.VITE_COMMIT_SHA && import.meta.env.VITE_COMMIT_SHA !== '$COMMIT_REF' && (
-                <p className="text-xs text-muted-foreground/60 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden sm:block">
-                  <a 
-                    href={`https://github.com/yeule0/lighter-web-keygen/commit/${import.meta.env.VITE_COMMIT_SHA}`}
-                    className="font-mono hover:text-muted-foreground transition-colors"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {import.meta.env.VITE_COMMIT_SHA.slice(0, 7)}
-                  </a>
-                </p>
+                <>
+                  {/* Desktop: centered */}
+                  <p className="text-xs text-muted-foreground/60 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden sm:block">
+                    <a 
+                      href={`https://github.com/yeule0/lighter-web-keygen/commit/${import.meta.env.VITE_COMMIT_SHA}`}
+                      className="font-mono hover:text-muted-foreground transition-colors"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {import.meta.env.VITE_COMMIT_SHA.slice(0, 7)}
+                    </a>
+                  </p>
+                  
+                  {/* Mobile: as third row */}
+                  <p className="text-xs text-muted-foreground/60 sm:hidden order-last w-full text-center">
+                    <a 
+                      href={`https://github.com/yeule0/lighter-web-keygen/commit/${import.meta.env.VITE_COMMIT_SHA}`}
+                      className="font-mono hover:text-muted-foreground transition-colors"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {import.meta.env.VITE_COMMIT_SHA.slice(0, 7)}
+                    </a>
+                  </p>
+                </>
               )}
               
               <div className="flex items-center gap-3">
