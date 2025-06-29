@@ -7,12 +7,15 @@ import { ThemeProvider } from './components/theme-provider'
 import { ThemeToggle } from './components/theme-toggle'
 import { Card, CardContent } from '@/components/ui/card'
 import { Toaster } from '@/components/ui/toaster'
-import { Sparkles } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { useToast } from '@/hooks/use-toast'
+import { Sparkles, Copy, CheckCircle2, AlertTriangle, Link, Key, Hash, Layers } from 'lucide-react'
 import { ConnectKitWrapper } from './components/ConnectKitWrapper'
 import { DomainWarning } from './components/DomainWarning'
 
 function App() {
   const { address, isConnected } = useAccount()
+  const { toast } = useToast()
   const [accountIndex, setAccountIndex] = useState<number | null>(null)
   const [selectedNetwork, setSelectedNetwork] = useState<'mainnet' | 'testnet'>('testnet')
   const [apiKeyData, setApiKeyData] = useState<{
@@ -22,6 +25,14 @@ function App() {
     apiKeyIndex: number
     network: 'mainnet' | 'testnet'
   } | null>(null)
+  
+  const copyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text)
+    toast({
+      title: "Copied!",
+      description: `${label} copied to clipboard`,
+    })
+  }
 
   return (
     <ThemeProvider defaultTheme="dark" storageKey="lighter-theme">
@@ -82,45 +93,127 @@ function App() {
                 )}
                 
                   {apiKeyData && (
-                    <Card className="border-green-500/20 bg-green-500/5">
+                    <Card className="border-green-500/20 bg-gradient-to-br from-green-500/5 to-green-500/10">
                       <CardContent className="p-6 sm:p-8">
                         <div className="space-y-6">
                           <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-full bg-green-500/10">
-                              <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                            <div className="p-3 rounded-full bg-green-500/10">
+                              <CheckCircle2 className="h-5 w-5 text-green-500" />
                             </div>
-                            <h3 className="text-xl sm:text-2xl font-semibold text-green-600 dark:text-green-400">
+                            <h3 className="text-xl sm:text-2xl font-semibold">
                               API Key Successfully Generated
                             </h3>
                           </div>
                           
-                          <div className="rounded-lg bg-muted p-3 sm:p-4 font-mono text-xs sm:text-sm overflow-x-auto">
-                            <div className="space-y-2 min-w-0">
-                              <div className="whitespace-nowrap">
-                                <span className="text-muted-foreground">BASE_URL:</span>{' '}
-                                {apiKeyData.network === 'mainnet' 
-                                  ? 'https://mainnet.zklighter.elliot.ai' 
-                                  : 'https://testnet.zklighter.elliot.ai'}
+                          <div className="space-y-3">
+                            <div className="group relative rounded-lg border bg-card p-4 transition-all hover:shadow-sm">
+                              <div className="flex items-center justify-between">
+                                <div className="space-y-1">
+                                  <div className="flex items-center gap-2">
+                                    <Link className="h-4 w-4 text-muted-foreground" />
+                                    <p className="text-sm font-medium text-muted-foreground">Base URL</p>
+                                  </div>
+                                  <p className="font-mono text-sm break-all pl-6">
+                                    {apiKeyData.network === 'mainnet' 
+                                      ? 'https://mainnet.zklighter.elliot.ai' 
+                                      : 'https://testnet.zklighter.elliot.ai'}
+                                  </p>
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                  onClick={() => copyToClipboard(
+                                    apiKeyData.network === 'mainnet' 
+                                      ? 'https://mainnet.zklighter.elliot.ai' 
+                                      : 'https://testnet.zklighter.elliot.ai',
+                                    'Base URL'
+                                  )}
+                                >
+                                  <Copy className="h-4 w-4" />
+                                </Button>
                               </div>
-                              <div className="whitespace-nowrap">
-                                <span className="text-muted-foreground">PRIVATE_KEY:</span>{' '}
-                                <span className="select-all">{apiKeyData.privateKey}</span>
+                            </div>
+                            
+                            <div className="group relative rounded-lg border bg-card p-4 transition-all hover:shadow-sm">
+                              <div className="flex items-center justify-between">
+                                <div className="space-y-1 flex-1 min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <Key className="h-4 w-4 text-muted-foreground" />
+                                    <p className="text-sm font-medium text-muted-foreground">Private Key</p>
+                                  </div>
+                                  <p className="font-mono text-xs break-all pl-6 text-muted-foreground">
+                                    {apiKeyData.privateKey}
+                                  </p>
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="opacity-0 group-hover:opacity-100 transition-opacity ml-2 shrink-0"
+                                  onClick={() => copyToClipboard(apiKeyData.privateKey, 'Private Key')}
+                                >
+                                  <Copy className="h-4 w-4" />
+                                </Button>
                               </div>
-                              <div className="whitespace-nowrap">
-                                <span className="text-muted-foreground">ACCOUNT_INDEX:</span>{' '}
-                                {apiKeyData.accountIndex}
+                            </div>
+                            
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              <div className="group relative rounded-lg border bg-card p-4 transition-all hover:shadow-sm">
+                                <div className="flex items-center justify-between">
+                                  <div className="space-y-1">
+                                    <div className="flex items-center gap-2">
+                                      <Hash className="h-4 w-4 text-muted-foreground" />
+                                      <p className="text-sm font-medium text-muted-foreground">Account Index</p>
+                                    </div>
+                                    <p className="font-mono text-sm pl-6">
+                                      {apiKeyData.accountIndex}
+                                    </p>
+                                  </div>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                    onClick={() => copyToClipboard(apiKeyData.accountIndex.toString(), 'Account Index')}
+                                  >
+                                    <Copy className="h-4 w-4" />
+                                  </Button>
+                                </div>
                               </div>
-                              <div className="whitespace-nowrap">
-                                <span className="text-muted-foreground">API_KEY_INDEX:</span>{' '}
-                                {apiKeyData.apiKeyIndex}
+                              
+                              <div className="group relative rounded-lg border bg-card p-4 transition-all hover:shadow-sm">
+                                <div className="flex items-center justify-between">
+                                  <div className="space-y-1">
+                                    <div className="flex items-center gap-2">
+                                      <Layers className="h-4 w-4 text-muted-foreground" />
+                                      <p className="text-sm font-medium text-muted-foreground">API Key Index</p>
+                                    </div>
+                                    <p className="font-mono text-sm pl-6">
+                                      {apiKeyData.apiKeyIndex}
+                                    </p>
+                                  </div>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                    onClick={() => copyToClipboard(apiKeyData.apiKeyIndex.toString(), 'API Key Index')}
+                                  >
+                                    <Copy className="h-4 w-4" />
+                                  </Button>
+                                </div>
                               </div>
                             </div>
                           </div>
                           
-                          <div className="rounded-lg bg-yellow-500/10 border border-yellow-500/20 p-3">
-                            <p className="text-xs sm:text-sm text-yellow-600 dark:text-yellow-400">
-                              Save this configuration securely. The private key will not be shown again!
-                            </p>
+                          <div className="flex items-start gap-3 rounded-lg bg-amber-500/10 border border-amber-500/20 p-4">
+                            <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+                            <div className="space-y-1">
+                              <p className="text-sm font-medium text-amber-600 dark:text-amber-400">
+                                Important Security Notice
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                Save this configuration securely. The private key will not be shown again and cannot be recovered if lost.
+                              </p>
+                            </div>
                           </div>
                         </div>
                       </CardContent>
