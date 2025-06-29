@@ -4,7 +4,7 @@ import { injected, coinbaseWallet } from 'wagmi/connectors'
 
 // Use public RPC endpoints that work well with CORS
 const rpcUrls = {
-  [mainnet.id]: 'https://eth.llamarpc.com',
+  [mainnet.id]: 'https://ethereum-rpc.publicnode.com',
   [zksync.id]: 'https://mainnet.era.zksync.io',
   [zksyncSepoliaTestnet.id]: 'https://sepolia.era.zksync.dev',
 }
