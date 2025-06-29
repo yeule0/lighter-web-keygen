@@ -20,7 +20,7 @@ export const config = createConfig({
     }),
     walletConnect({
       projectId,
-      showQrModal: true,
+      showQrModal: false, // Let ConnectKit handle the modal
       metadata: {
         name: 'Lighter Keys',
         description: 'Generate API keys for Lighter DEX',
