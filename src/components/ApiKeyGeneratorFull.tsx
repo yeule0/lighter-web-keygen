@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSignMessage, useAccount, useSwitchChain } from 'wagmi'
 import { mainnet } from 'wagmi/chains'
 import { LighterFullCrypto } from '../lib/lighter-full'
@@ -49,6 +49,15 @@ export function ApiKeyGeneratorFull({ accountIndex, network, onApiKeyGenerated }
   const { chain } = useAccount()
   const { switchChainAsync } = useSwitchChain()
   const { toast } = useToast()
+  
+  // Reset component state when network or account changes
+  useEffect(() => {
+    setStep('setup')
+    setError(null)
+    setInfo(null)
+    setGeneratedKeys(null)
+    setTargetKeyIndex('1')
+  }, [network, accountIndex])
   
   const networkConfig = {
     mainnet: {

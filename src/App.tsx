@@ -36,11 +36,11 @@ function App() {
     }
   }, [isConnected])
   
-  // Clear API key data when network changes
+  // Clear API key data when network or account changes
   useEffect(() => {
     setApiKeyData(null)
     setShowPrivateKey(false)
-  }, [selectedNetwork])
+  }, [selectedNetwork, accountIndex])
   
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text)
@@ -101,6 +101,7 @@ function App() {
                 
                 {accountIndex !== null && (
                   <ApiKeyGeneratorFull 
+                    key={`${accountIndex}-${selectedNetwork}`}
                     address={address} 
                     accountIndex={accountIndex}
                     network={selectedNetwork}
