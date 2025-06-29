@@ -1,6 +1,9 @@
 import { createConfig, http } from 'wagmi'
 import { mainnet, zksync, zksyncSepoliaTestnet } from 'wagmi/chains'
-import { injected, coinbaseWallet } from 'wagmi/connectors'
+import { injected, walletConnect, coinbaseWallet } from 'wagmi/connectors'
+
+// WalletConnect Project ID
+const projectId = '030fa561fc5ffb379c4f038ebe7ef245'
 
 // Use public RPC endpoints that work well with CORS
 const rpcUrls = {
@@ -14,6 +17,16 @@ export const config = createConfig({
   connectors: [
     injected({
       shimDisconnect: true,
+    }),
+    walletConnect({
+      projectId,
+      showQrModal: true,
+      metadata: {
+        name: 'Lighter Keys',
+        description: 'Generate API keys for Lighter DEX',
+        url: 'https://lighterkey.netlify.app',
+        icons: ['https://lighter.xyz/logo.png'],
+      },
     }),
     coinbaseWallet({
       appName: 'Lighter API Key Generator',
