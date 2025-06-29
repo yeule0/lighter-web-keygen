@@ -244,33 +244,44 @@ function App() {
         </main>
 
         <footer className="mt-auto border-t">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-6 sm:py-8">
-              <p className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
+          <div className="container mx-auto px-4 py-4 sm:py-6">
+            <div className="flex flex-col items-center gap-3 text-center">
+              <p className="text-xs text-muted-foreground">
                 Powered by{' '}
                 <a
                   href="https://lighter.xyz"
                   target="_blank"
                   rel="noreferrer"
-                  className="font-medium underline underline-offset-4 transition-opacity hover:opacity-80"
+                  className="font-medium underline underline-offset-4 hover:text-foreground transition-colors"
                 >
                   Lighter
                 </a>
+                {import.meta.env.VITE_COMMIT_SHA && (
+                  <>
+                    {' · '}
+                    <a 
+                      href={`https://github.com/yeule0/lighter-web-keygen/commit/${import.meta.env.VITE_COMMIT_SHA}`}
+                      className="font-mono hover:text-foreground transition-colors"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {import.meta.env.VITE_COMMIT_SHA.slice(0, 7)}
+                    </a>
+                  </>
+                )}
               </p>
-              <div className="flex items-center gap-3">
-                <span className="text-xs sm:text-sm text-muted-foreground">
-                  Made by yeule0
-                </span>
-                <div className="flex items-center gap-2">
+              <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                <span>Made by yeule0</span>
+                <div className="flex items-center gap-3">
                   <a
                     href="https://x.com/yeule0"
                     target="_blank"
                     rel="noreferrer"
-                    className="text-muted-foreground hover:text-foreground transition-all hover:scale-110"
-                    aria-label="X (Twitter) Profile"
+                    className="hover:text-foreground transition-colors"
+                    aria-label="X (Twitter)"
                   >
                     <svg
-                      className="h-4 w-4 sm:h-5 sm:w-5"
+                      className="h-3.5 w-3.5"
                       viewBox="0 0 24 24"
                       fill="currentColor"
                     >
@@ -281,11 +292,11 @@ function App() {
                     href="https://github.com/yeule0/lighter-web-keygen"
                     target="_blank"
                     rel="noreferrer"
-                    className="text-muted-foreground hover:text-foreground transition-all hover:scale-110"
-                    aria-label="GitHub Profile"
+                    className="hover:text-foreground transition-colors"
+                    aria-label="GitHub"
                   >
                     <svg
-                      className="h-4 w-4 sm:h-5 sm:w-5"
+                      className="h-3.5 w-3.5"
                       viewBox="0 0 24 24"
                       fill="currentColor"
                     >
@@ -295,19 +306,6 @@ function App() {
                 </div>
               </div>
             </div>
-            {import.meta.env.VITE_COMMIT_SHA && (
-              <div className="mt-3 text-xs text-muted-foreground/60">
-                Deployed from{' '}
-                <a 
-                  href={`https://github.com/yeule0/lighter-web-keygen/commit/${import.meta.env.VITE_COMMIT_SHA}`}
-                  className="font-mono underline underline-offset-2 hover:text-muted-foreground transition-colors"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {import.meta.env.VITE_COMMIT_SHA.slice(0, 7)}
-                </a>
-              </div>
-            )}
           </div>
         </footer>
         </div>
