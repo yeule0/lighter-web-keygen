@@ -15,4 +15,16 @@ export default defineConfig({
       'Cross-Origin-Opener-Policy': 'same-origin',
     },
   },
+  build: {
+    chunkSizeWarningLimit: 1500, // Increase limit to 1500 kB
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+          'wagmi-vendor': ['wagmi', 'viem', '@wagmi/core'],
+          'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-select', '@radix-ui/react-toast'],
+        },
+      },
+    },
+  },
 })
