@@ -26,8 +26,8 @@ export function ConnectKitWrapper({ children }: ConnectKitWrapperProps) {
         walletConnectName: "Other Wallets",
       }}
       customTheme={{
-        "--ck-font-family": "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif",
-        "--ck-border-radius": "var(--radius)",
+        "--ck-font-family": "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
+        "--ck-border-radius": "0.5rem",
         "--ck-connectbutton-font-size": "14px",
         "--ck-connectbutton-font-weight": "500",
         "--ck-connectbutton-border-radius": "var(--radius)",
@@ -53,8 +53,10 @@ export function ConnectKitWrapper({ children }: ConnectKitWrapperProps) {
         "--ck-secondary-button-border-radius": "var(--radius)",
         
         "--ck-modal-heading-font-weight": "600",
-        "--ck-modal-box-shadow": "0 25px 50px -12px rgb(0 0 0 / 0.25)",
-        "--ck-modal-border-radius": "calc(var(--radius) * 1.5)",
+        "--ck-modal-heading-font-size": "18px",
+        "--ck-modal-box-shadow": "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+        "--ck-modal-border-radius": "0.75rem",
+        "--ck-modal-backdrop-filter": "blur(4px)",
         
         "--ck-body-background": "hsl(var(--background))",
         "--ck-body-background-transparent": "hsl(var(--background) / 0)",
@@ -83,6 +85,29 @@ export function ConnectKitWrapper({ children }: ConnectKitWrapperProps) {
         "--ck-dropdown-button-color": "hsl(var(--secondary-foreground))",
         "--ck-dropdown-button-hover-background": "hsl(var(--secondary)/80)",
         "--ck-dropdown-button-hover-color": "hsl(var(--secondary-foreground))",
+        
+        "--ck-qr-border-radius": "var(--radius)",
+        "--ck-qr-background": "white",
+        
+        "--ck-recent-badge-background": "hsl(var(--primary)/10)",
+        "--ck-recent-badge-color": "hsl(var(--primary))",
+        "--ck-recent-badge-border-radius": "var(--radius)",
+        
+        "--ck-wallet-option-background": "hsl(var(--card))",
+        "--ck-wallet-option-background-hover": "hsl(var(--accent))",
+        "--ck-wallet-option-border-radius": "var(--radius)",
+        "--ck-wallet-option-shadow": "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+        "--ck-wallet-option-shadow-hover": "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+        
+        "--ck-graphic-primary-background": "hsl(var(--primary)/10)",
+        "--ck-graphic-primary-color": "hsl(var(--primary))",
+        "--ck-graphic-secondary-background": "hsl(var(--secondary))",
+        "--ck-graphic-secondary-color": "hsl(var(--secondary-foreground))",
+        
+        "--ck-close-button-background": "transparent",
+        "--ck-close-button-background-hover": "hsl(var(--accent))",
+        "--ck-close-button-color": "hsl(var(--muted-foreground))",
+        "--ck-close-button-color-hover": "hsl(var(--foreground))",
       }}
     >
       {children}

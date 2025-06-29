@@ -19,8 +19,8 @@ This application allows users to generate and register Layer 2 API keys for Ligh
 
 1. Connect your Ethereum wallet to the application
 2. The app checks if you have an existing Lighter account
-3. Choose whether you're setting up a new account or have existing API keys
-4. Generate a new Layer 2 API key pair
+3. Select your target API key index (1-255)
+4. Generate a new secure Layer 2 API key pair
 5. Sign and submit the transaction to register your new key
 
 ## Development
