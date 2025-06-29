@@ -206,21 +206,25 @@ export function AccountCheck({ address, onAccountFound, onNetworkChange }: Accou
                         <User className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                       )}
                     </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-base">
-                          {accounts[0].index > 1000000 ? 'Sub-Account' : 'Main Account'}
-                        </span>
-                        <span className="text-sm text-muted-foreground">#{accounts[0].index}</span>
-                        <Badge className="bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-semibold text-base">
+                              {accounts[0].index > 1000000 ? 'Sub-Account' : 'Main Account'}
+                            </span>
+                            <span className="text-sm text-muted-foreground break-all">#{accounts[0].index}</span>
+                          </div>
+                          <div className="text-xs text-muted-foreground font-mono mt-1">
+                            {accounts[0].l2PublicKey ? 
+                              `${accounts[0].l2PublicKey.slice(0, 16)}...${accounts[0].l2PublicKey.slice(-8)}` :
+                              'No public key'}
+                          </div>
+                        </div>
+                        <Badge className="bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20 shrink-0">
                           <Check className="h-3 w-3 mr-1" />
                           Active
                         </Badge>
-                      </div>
-                      <div className="text-xs text-muted-foreground font-mono mt-1">
-                        {accounts[0].l2PublicKey ? 
-                          `${accounts[0].l2PublicKey.slice(0, 16)}...${accounts[0].l2PublicKey.slice(-8)}` :
-                          'No public key'}
                       </div>
                     </div>
                   </div>
@@ -254,21 +258,25 @@ export function AccountCheck({ address, onAccountFound, onNetworkChange }: Accou
                             <User className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                           )}
                         </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className="font-semibold text-base">{accountLabel}</span>
-                            <span className="text-sm text-muted-foreground">#{account.index}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-semibold text-base">{accountLabel}</span>
+                                <span className="text-sm text-muted-foreground break-all">#{account.index}</span>
+                              </div>
+                              <div className="text-xs text-muted-foreground font-mono mt-1">
+                                {account.l2PublicKey ? 
+                                  `${account.l2PublicKey.slice(0, 16)}...${account.l2PublicKey.slice(-8)}` :
+                                  'No public key'}
+                              </div>
+                            </div>
                             {selectedAccountIndex === account.index && (
-                              <Badge className="bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20 animate-in-scale">
+                              <Badge className="bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20 animate-in-scale shrink-0">
                                 <Check className="h-3 w-3 mr-1" />
                                 Selected
                               </Badge>
                             )}
-                          </div>
-                          <div className="text-xs text-muted-foreground font-mono mt-1">
-                            {account.l2PublicKey ? 
-                              `${account.l2PublicKey.slice(0, 16)}...${account.l2PublicKey.slice(-8)}` :
-                              'No public key'}
                           </div>
                         </div>
                       </div>
