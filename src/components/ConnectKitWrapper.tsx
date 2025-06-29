@@ -23,7 +23,8 @@ export function ConnectKitWrapper({ children }: ConnectKitWrapperProps) {
         embedGoogleFonts: false,
         avoidLayoutShift: true,
         enforceSupportedChains: false,
-        walletConnectName: "Other Wallets",
+        walletConnectName: "WalletConnect",
+        walletConnectCTA: "both",
       }}
       customTheme={{
         "--ck-font-family": "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
