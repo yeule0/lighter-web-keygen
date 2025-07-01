@@ -457,7 +457,7 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
                         <div className="p-2 rounded-lg bg-green-500/10 animate-in-scale">
                           <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-green-500" />
                         </div>
-                        <div className="min-w-0">
+                        <div className="min-w-0 flex-1">
                           <h3 className="text-base sm:text-lg font-medium">
                             API Key #{key.keyIndex} Generated Successfully
                           </h3>
@@ -467,19 +467,19 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
                         </div>
                       </div>
                       
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Link className="h-3.5 w-3.5" />
+                      <div className="space-y-3 sm:space-y-4">
+                        <div className="space-y-1.5 sm:space-y-2">
+                          <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-muted-foreground">
+                            <Link className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
                             <span>Base URL</span>
                           </div>
-                          <div className="group relative flex items-center gap-2">
+                          <div className="group relative flex items-center gap-1.5 sm:gap-2">
                             <input
                               readOnly
                               value={key.network === 'mainnet' 
                                 ? 'https://mainnet.zklighter.elliot.ai' 
                                 : 'https://testnet.zklighter.elliot.ai'}
-                              className="flex-1 bg-muted/50 rounded-md px-2 sm:px-3 py-2 text-xs sm:text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring overflow-hidden text-ellipsis transition-all duration-200 hover:bg-muted/70"
+                              className="flex-1 min-w-0 bg-muted/50 rounded-md px-2 sm:px-3 py-1.5 sm:py-2 text-[11px] sm:text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring overflow-hidden text-ellipsis transition-all duration-200 hover:bg-muted/70"
                             />
                             <Button
                               variant="ghost"
@@ -492,34 +492,34 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
                                 'Base URL'
                               )}
                             >
-                              <Copy className="h-3.5 w-3.5" />
+                              <Copy className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                             </Button>
                           </div>
                         </div>
                         
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Key className="h-3.5 w-3.5" />
+                        <div className="space-y-1.5 sm:space-y-2">
+                          <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-muted-foreground">
+                            <Key className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
                             <span>Private Key</span>
                           </div>
-                          <div className="group relative flex items-center gap-2">
-                            <div className="relative flex-1">
+                          <div className="group relative flex items-center gap-1.5 sm:gap-2">
+                            <div className="relative flex-1 min-w-0">
                               <input
                                 readOnly
                                 type={showPrivateKeys[key.keyIndex] ? "text" : "password"}
                                 value={key.privateKey}
-                                className="w-full bg-muted/50 rounded-md px-2 sm:px-3 py-2 pr-10 text-xs sm:text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring"
+                                className="w-full bg-muted/50 rounded-md px-2 sm:px-3 py-1.5 sm:py-2 pr-9 sm:pr-10 text-[11px] sm:text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring"
                               />
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0"
+                                className="absolute right-0.5 sm:right-1 top-1/2 -translate-y-1/2 h-6 w-6 sm:h-7 sm:w-7 p-0"
                                 onClick={() => setShowPrivateKeys(prev => ({ ...prev, [key.keyIndex]: !prev[key.keyIndex] }))}
                               >
                                 {showPrivateKeys[key.keyIndex] ? (
-                                  <EyeOff className="h-3.5 w-3.5" />
+                                  <EyeOff className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                                 ) : (
-                                  <Eye className="h-3.5 w-3.5" />
+                                  <Eye className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                                 )}
                               </Button>
                             </div>
@@ -529,22 +529,22 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
                               className="shrink-0 transition-all duration-200 hover:scale-110"
                               onClick={() => copyToClipboard(key.privateKey, 'Private key')}
                             >
-                              <Copy className="h-3.5 w-3.5" />
+                              <Copy className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                             </Button>
                           </div>
                         </div>
                         
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <Hash className="h-3.5 w-3.5" />
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                          <div className="space-y-1.5 sm:space-y-2">
+                            <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-muted-foreground">
+                              <Hash className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
                               <span>Account Index</span>
                             </div>
-                            <div className="group relative flex items-center gap-2">
+                            <div className="group relative flex items-center gap-1.5 sm:gap-2">
                               <input
                                 readOnly
                                 value={key.accountIndex}
-                                className="flex-1 bg-muted/50 rounded-md px-2 sm:px-3 py-2 text-xs sm:text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring"
+                                className="flex-1 min-w-0 bg-muted/50 rounded-md px-2 sm:px-3 py-1.5 sm:py-2 text-[11px] sm:text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring"
                               />
                               <Button
                                 variant="ghost"
@@ -552,21 +552,21 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
                                 className="shrink-0"
                                 onClick={() => copyToClipboard(key.accountIndex.toString(), 'Account index')}
                               >
-                                <Copy className="h-3.5 w-3.5" />
+                                <Copy className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                               </Button>
                             </div>
                           </div>
                           
-                          <div className="space-y-2">
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <Layers className="h-3.5 w-3.5" />
+                          <div className="space-y-1.5 sm:space-y-2">
+                            <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-muted-foreground">
+                              <Layers className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
                               <span>API Key Index</span>
                             </div>
-                            <div className="group relative flex items-center gap-2">
+                            <div className="group relative flex items-center gap-1.5 sm:gap-2">
                               <input
                                 readOnly
                                 value={key.keyIndex}
-                                className="flex-1 bg-muted/50 rounded-md px-2 sm:px-3 py-2 text-xs sm:text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring"
+                                className="flex-1 min-w-0 bg-muted/50 rounded-md px-2 sm:px-3 py-1.5 sm:py-2 text-[11px] sm:text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring"
                               />
                               <Button
                                 variant="ghost"
@@ -574,15 +574,15 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
                                 className="shrink-0"
                                 onClick={() => copyToClipboard(key.keyIndex.toString(), 'Key index')}
                               >
-                                <Copy className="h-3.5 w-3.5" />
+                                <Copy className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                               </Button>
                             </div>
                           </div>
                         </div>
                         
-                        <Alert variant="default" className="border-amber-500/50">
-                          <AlertTriangle className="h-4 w-4 text-amber-500" />
-                          <AlertDescription>
+                        <Alert variant="default" className="border-amber-500/50 p-3 sm:p-4">
+                          <AlertTriangle className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-amber-500" />
+                          <AlertDescription className="text-[11px] sm:text-xs">
                             <strong>Security Notice</strong><br />
                             Save this configuration securely. The private key cannot be recovered if lost.
                           </AlertDescription>
