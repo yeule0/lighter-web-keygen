@@ -85,9 +85,9 @@ function App() {
           
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20 relative z-10">
             <div className="mx-auto max-w-6xl">
-              <div className="mb-12 sm:mb-16">
+              <div className="mb-8 sm:mb-10">
                 <span className="badge-minimal mb-3 sm:mb-4 inline-block text-[10px] sm:text-[11px]">LIGHTER DEX</span>
-                <h1 className="serif-heading text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-normal mb-6 sm:mb-8 leading-tight sm:leading-normal">
+                <h1 className="serif-heading text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-normal leading-tight sm:leading-normal">
                   API Key<br />Generator
                 </h1>
               </div>
