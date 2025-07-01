@@ -27,7 +27,7 @@ export function ConnectKitWrapper({ children }: ConnectKitWrapperProps) {
         walletConnectCTA: "both",
       }}
       customTheme={{
-        "--ck-font-family": "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
+        "--ck-font-family": "'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
         "--ck-border-radius": "0.5rem",
         "--ck-connectbutton-font-size": "14px",
         "--ck-connectbutton-font-weight": "500",

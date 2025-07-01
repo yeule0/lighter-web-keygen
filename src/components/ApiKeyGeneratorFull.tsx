@@ -238,7 +238,7 @@ export function ApiKeyGeneratorFull({ accountIndex, network, onApiKeyGenerated }
       <Card className="card-hover shadow-glow animate-slide-up">
       <CardHeader className="p-6 sm:p-8 pb-4 sm:pb-6">
         <div className="space-y-2">
-          <CardTitle className="flex items-center gap-2 text-xl sm:text-2xl font-bold tracking-tight">
+          <CardTitle className="flex items-center gap-2 text-xl sm:text-2xl font-medium tracking-tight">
             <Key className="h-5 w-5 text-primary" />
             Generate API Key
             <Badge variant="secondary" className="ml-auto text-xs bg-primary/10 border-primary/20 font-mono animate-pulse-soft">Full Crypto</Badge>

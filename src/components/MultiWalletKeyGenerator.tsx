@@ -568,7 +568,7 @@ export function MultiWalletKeyGenerator({ network }: MultiWalletKeyGeneratorProp
     <Card className="card-hover shadow-glow animate-slide-up">
       <CardHeader className="p-6 sm:p-8 pb-4 sm:pb-6">
         <div className="space-y-2">
-          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl md:text-2xl font-bold tracking-tight">
+          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl md:text-2xl font-medium tracking-tight">
             <Wallet className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
             <span className="flex-1">Multi-Account Key<br className="sm:hidden" /> Generation</span>
             <Badge variant="secondary" className="text-[10px] sm:text-xs bg-primary/10 border-primary/20 font-mono animate-pulse-soft">Beta</Badge>
@@ -587,7 +587,7 @@ export function MultiWalletKeyGenerator({ network }: MultiWalletKeyGeneratorProp
                   <Info className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary dark:text-white" />
                 </div>
                 <div className="flex-1 space-y-3 sm:space-y-4">
-                  <h3 className="text-sm sm:text-base font-semibold tracking-tight">Multi-account generation workflow</h3>
+                  <h3 className="text-sm sm:text-base font-medium tracking-tight">Multi-account generation workflow</h3>
                   <div className="space-y-2 sm:space-y-3">
                     <div className="flex gap-2 sm:gap-3">
                       <span className="flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-primary/10 dark:bg-white/10 text-[10px] sm:text-xs font-medium flex items-center justify-center">1</span>
@@ -863,7 +863,7 @@ export function MultiWalletKeyGenerator({ network }: MultiWalletKeyGeneratorProp
                   <Info className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div className="flex-1 space-y-2.5 sm:space-y-3">
-                  <h3 className="text-sm sm:text-base font-semibold tracking-tight">Tips for smooth operation</h3>
+                  <h3 className="text-sm sm:text-base font-medium tracking-tight">Tips for smooth operation</h3>
                   <div className="space-y-2 sm:space-y-2.5">
                     <div className="flex items-start gap-1.5 sm:gap-2">
                       <span className="text-xs sm:text-body-small text-secondary">•</span>
@@ -927,7 +927,7 @@ export function MultiWalletKeyGenerator({ network }: MultiWalletKeyGeneratorProp
                           <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-green-500" />
                         </div>
                         <div className="min-w-0">
-                          <h3 className="text-base sm:text-lg font-semibold">
+                          <h3 className="text-base sm:text-lg font-medium">
                             API Key Generated
                           </h3>
                           <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">

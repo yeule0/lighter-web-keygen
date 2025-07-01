@@ -260,7 +260,7 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
     <Card className="card-hover shadow-glow animate-slide-up">
       <CardHeader className="p-6 sm:p-8 pb-4 sm:pb-6">
         <div className="space-y-2">
-          <CardTitle className="flex items-center gap-2 text-xl sm:text-2xl font-bold tracking-tight">
+          <CardTitle className="flex items-center gap-2 text-xl sm:text-2xl font-medium tracking-tight">
             <Layers className="h-5 w-5 text-primary" />
             Bulk Key Generation
             <Badge variant="secondary" className="ml-auto text-xs bg-primary/10 border-primary/20 font-mono animate-pulse-soft">Beta</Badge>
@@ -458,7 +458,7 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
                           <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-green-500" />
                         </div>
                         <div className="min-w-0">
-                          <h3 className="text-base sm:text-lg font-semibold">
+                          <h3 className="text-base sm:text-lg font-medium">
                             API Key #{key.keyIndex} Generated Successfully
                           </h3>
                           <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">

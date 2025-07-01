@@ -56,8 +56,8 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        sans: ["-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
-        mono: ["Fira Code", "Consolas", "Monaco", "monospace"],
+        sans: ["Plus Jakarta Sans", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
+        mono: ["JetBrains Mono", "Fira Code", "Consolas", "Monaco", "monospace"],
       },
       keyframes: {
         "accordion-down": {
