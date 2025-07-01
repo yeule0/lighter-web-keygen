@@ -30,7 +30,9 @@ import {
   EyeOff,
   Link,
   Hash,
-  AlertTriangle
+  AlertTriangle,
+  Plus,
+  Minus
 } from 'lucide-react'
 
 interface BulkKeyGeneratorProps {
@@ -271,19 +273,48 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
             <div className="space-y-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Number of Keys to Generate</label>
-                <Input
-                  type="number"
-                  value={keyCount}
-                  onChange={(e) => {
-                    const value = parseInt(e.target.value)
-                    if (value >= 1 && value <= 20) {
-                      setKeyCount(e.target.value)
-                    }
-                  }}
-                  min="1"
-                  max="20"
-                  placeholder="Enter number of keys (1-20)"
-                />
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="h-9 w-9 shrink-0"
+                    onClick={() => {
+                      const value = Math.max(1, parseInt(keyCount) - 1)
+                      setKeyCount(value.toString())
+                    }}
+                    disabled={parseInt(keyCount) <= 1}
+                  >
+                    <Minus className="h-4 w-4" />
+                  </Button>
+                  <Input
+                    type="number"
+                    value={keyCount}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value)
+                      if (value >= 1 && value <= 20) {
+                        setKeyCount(e.target.value)
+                      }
+                    }}
+                    min="1"
+                    max="20"
+                    placeholder="Enter number of keys (1-20)"
+                    className="text-center"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="h-9 w-9 shrink-0"
+                    onClick={() => {
+                      const value = Math.min(20, parseInt(keyCount) + 1)
+                      setKeyCount(value.toString())
+                    }}
+                    disabled={parseInt(keyCount) >= 20}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
                 <p className="text-xs text-muted-foreground">
                   Maximum 20 keys at once for safety
                 </p>
@@ -291,19 +322,48 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">Starting Key Index</label>
-                <Input
-                  type="number"
-                  value={startingIndex}
-                  onChange={(e) => {
-                    const value = parseInt(e.target.value)
-                    if (value >= 1 && value <= 1000) {
-                      setStartingIndex(e.target.value)
-                    }
-                  }}
-                  min="1"
-                  max="1000"
-                  placeholder="Enter starting index (1-1000)"
-                />
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="h-9 w-9 shrink-0"
+                    onClick={() => {
+                      const value = Math.max(1, parseInt(startingIndex) - 1)
+                      setStartingIndex(value.toString())
+                    }}
+                    disabled={parseInt(startingIndex) <= 1}
+                  >
+                    <Minus className="h-4 w-4" />
+                  </Button>
+                  <Input
+                    type="number"
+                    value={startingIndex}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value)
+                      if (value >= 1 && value <= 1000) {
+                        setStartingIndex(e.target.value)
+                      }
+                    }}
+                    min="1"
+                    max="1000"
+                    placeholder="Enter starting index (1-1000)"
+                    className="text-center"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="h-9 w-9 shrink-0"
+                    onClick={() => {
+                      const value = Math.min(1000, parseInt(startingIndex) + 1)
+                      setStartingIndex(value.toString())
+                    }}
+                    disabled={parseInt(startingIndex) >= 1000}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
                 <p className="text-xs text-muted-foreground">
                   Keys will be generated with indices {startingIndex} to {parseInt(startingIndex) + parseInt(keyCount) - 1}
                 </p>
