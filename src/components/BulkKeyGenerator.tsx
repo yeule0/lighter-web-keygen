@@ -51,6 +51,7 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
   const [startingIndex, setStartingIndex] = useState('1')
   const [currentKeyIndex, setCurrentKeyIndex] = useState(0)
   const [showPrivateKeys, setShowPrivateKeys] = useState<{ [key: number]: boolean }>({})
+  const [isWaitingForRateLimit, setIsWaitingForRateLimit] = useState(false)
   
   const { signMessageAsync } = useSignMessage()
   const { chain } = useAccount()
@@ -65,6 +66,7 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
     setGeneratedKeys([])
     setCurrentKeyIndex(0)
     setShowPrivateKeys({})
+    setIsWaitingForRateLimit(false)
   }, [network])
 
   const networkConfig = {
@@ -205,6 +207,14 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
           accountIndex,
           network
         })
+
+        if (i < count - 1) {
+          setCurrentKeyIndex(keyIndex)
+          setProgress(((i + 1) / count) * 100)
+          setIsWaitingForRateLimit(true)
+          await new Promise(resolve => setTimeout(resolve, 10000)) 
+          setIsWaitingForRateLimit(false)
+        }
 
       }
       
@@ -395,14 +405,20 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
           <div className="space-y-4">
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm">
-                <span>Processing key index {currentKeyIndex} ({Math.min(Math.ceil((progress / 100) * parseInt(keyCount)), parseInt(keyCount))} of {keyCount})...</span>
+                <span>
+                  {isWaitingForRateLimit 
+                    ? `Waiting to avoid rate limits...` 
+                    : `Processing key index ${currentKeyIndex}`} ({Math.min(Math.ceil((progress / 100) * parseInt(keyCount)), parseInt(keyCount))} of {keyCount})
+                </span>
                 <span>{Math.round(progress)}%</span>
               </div>
               <Progress value={progress} className="h-2" />
             </div>
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">
-                Please approve each signature request in your wallet.
+                {isWaitingForRateLimit 
+                  ? 'Adding a 10-second delay between keys to respect API rate limits.'
+                  : 'Please approve each signature request in your wallet.'}
               </p>
               <p className="text-xs text-muted-foreground">
                 Each key requires a separate transaction. You may need to switch to Ethereum mainnet for signatures.
