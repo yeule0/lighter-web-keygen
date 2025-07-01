@@ -97,7 +97,7 @@ function App() {
                   <ConnectKitButton />
                   <div className="mt-8 max-w-2xl">
                     <p className="text-sm sm:text-body-small text-secondary leading-relaxed hidden sm:block">
-                      API key generation for Lighter DEX involves cryptographic operations and requires careful handling. Private keys generated are non-recoverable if lost. This tool operates entirely in your browser - no data is transmitted to external servers.
+                      API key generation for Lighter DEX involves cryptographic operations and requires careful handling. Private keys generated are non-recoverable if lost. This tool operates entirely in your browser no<br />data is transmitted to external servers.
                     </p>
                     <div className="sm:hidden space-y-3">
                       <p className="text-xs text-secondary leading-relaxed">
