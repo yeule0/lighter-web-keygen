@@ -306,9 +306,9 @@ function App() {
                     Lighter
                   </a>
                 </p>
-                <p className="text-[9px] text-muted-foreground/50 mt-1">
-                  This is free, open-source software. You are solely responsible for your private keys and transactions.<br />
-                  I accept no liability for any losses. Always double-check before signing. Use at your own risk.
+                <p className="text-[10px] sm:text-[9px] text-muted-foreground/50 mt-2 sm:mt-1 leading-relaxed">
+                  This is free, open-source software. You are solely responsible for your private keys and transactions.<br className="hidden sm:block" />
+                  <span className="sm:hidden"> </span>I accept no liability for any losses. Always double-check before signing. Use at your own risk.
                 </p>
               </div>
               
