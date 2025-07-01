@@ -57,7 +57,7 @@ export function ConnectKitWrapper({ children }: ConnectKitWrapperProps) {
         "--ck-modal-heading-font-size": "18px",
         "--ck-modal-box-shadow": "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
         "--ck-modal-border-radius": "0.75rem",
-        "--ck-modal-backdrop-filter": "blur(4px)",
+        "--ck-modal-backdrop-filter": "none",
         
         "--ck-body-background": "hsl(var(--background))",
         "--ck-body-background-transparent": "hsl(var(--background) / 0)",
@@ -71,8 +71,8 @@ export function ConnectKitWrapper({ children }: ConnectKitWrapperProps) {
         "--ck-body-divider": "hsl(var(--border))",
         "--ck-body-action-color": "hsl(var(--primary))",
         
-        "--ck-overlay-background": mode === 'dark' ? "rgba(0, 0, 0, 0.8)" : "rgba(0, 0, 0, 0.4)",
-        "--ck-overlay-backdrop-filter": "blur(8px)",
+        "--ck-overlay-background": mode === 'dark' ? "#000000" : "#ffffff",
+        "--ck-overlay-backdrop-filter": "none",
         
         "--ck-focus-color": "hsl(var(--ring))",
         "--ck-spinner-color": "hsl(var(--primary))",

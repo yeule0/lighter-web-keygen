@@ -120,13 +120,11 @@ export function AccountCheck({ address, onAccountFound, onNetworkChange }: Accou
     <Card className="card-hover shadow-glow animate-slide-up">
       <CardHeader className="p-6 sm:p-8 pb-4 sm:pb-6">
         <div className="space-y-2">
-          <CardTitle className="flex items-center gap-2.5 text-xl sm:text-2xl font-semibold">
-            <div className="p-2 rounded-lg bg-primary/10 transition-all duration-300 hover:bg-primary/20">
-              <Wallet className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-            </div>
+          <CardTitle className="flex items-center gap-2 text-xl sm:text-2xl font-bold tracking-tight">
+            <Wallet className="h-5 w-5 text-primary" />
             Account Selection
           </CardTitle>
-          <CardDescription className="text-sm sm:text-base text-muted-foreground">
+          <CardDescription className="text-body-small text-secondary">
             Select your Lighter network and account to generate API keys
           </CardDescription>
         </div>
@@ -136,30 +134,30 @@ export function AccountCheck({ address, onAccountFound, onNetworkChange }: Accou
         <div className="space-y-3">
           <label className="text-sm font-medium text-foreground/80">Select Network</label>
           <Select value={selectedNetwork} onValueChange={handleNetworkChange}>
-            <SelectTrigger className="w-full transition-all duration-200 hover:border-primary/50">
+            <SelectTrigger className="w-full transition-all duration-200 hover:border-foreground/30 dark:hover:border-white/50 focus:border-primary dark:focus:border-white shadow-sm">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-background dark:bg-black border border-border dark:border-white/20">
               <SelectItem value="testnet">
                 <div className="flex items-center justify-between w-full">
-                  <div className="flex items-center gap-2">
-                    <div className="p-1 rounded bg-amber-500/10">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20">
                       <Globe className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                     </div>
-                    <span className="font-medium">Testnet</span>
+                    <span className="font-semibold">Testnet</span>
                   </div>
-                  <Badge variant="outline" className="ml-auto text-xs bg-amber-500/10 border-amber-500/20">Chain ID: 300</Badge>
+                  <Badge variant="outline" className="ml-auto text-xs bg-amber-500/10 border-amber-500/20 font-mono">Chain ID: 300</Badge>
                 </div>
               </SelectItem>
               <SelectItem value="mainnet">
                 <div className="flex items-center justify-between w-full">
-                  <div className="flex items-center gap-2">
-                    <div className="p-1 rounded bg-green-500/10">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-1.5 rounded-lg bg-green-500/10 border border-green-500/20">
                       <Globe className="h-4 w-4 text-green-600 dark:text-green-400" />
                     </div>
-                    <span className="font-medium">Mainnet</span>
+                    <span className="font-semibold">Mainnet</span>
                   </div>
-                  <Badge variant="outline" className="ml-auto text-xs bg-green-500/10 border-green-500/20">Chain ID: 304</Badge>
+                  <Badge variant="outline" className="ml-auto text-xs bg-green-500/10 border-green-500/20 font-mono">Chain ID: 304</Badge>
                 </div>
               </SelectItem>
             </SelectContent>
@@ -193,12 +191,13 @@ export function AccountCheck({ address, onAccountFound, onNetworkChange }: Accou
             </div>
             
             {accounts.length === 1 ? (
-              <div className="relative rounded-lg border p-4 transition-all duration-200 hover:border-primary/50 shadow-sm hover:shadow-md">
-                <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-primary/0 rounded-lg" />
-                <div className="relative space-y-2">
+              <div className="rounded-xl border border-border/40 dark:border-white/20 p-4 transition-all duration-200 hover:border-foreground/30 dark:hover:border-white/30 hover:shadow-sm">
+                <div className="space-y-2">
                   <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg transition-all duration-300 ${
-                      accounts[0].index > 1000000 ? 'bg-purple-500/10' : 'bg-blue-500/10'
+                    <div className={`p-2.5 rounded-xl transition-all duration-300 border ${
+                      accounts[0].index > 1000000 
+                        ? 'bg-purple-500/10 border-purple-500/20' 
+                        : 'bg-blue-500/10 border-blue-500/20'
                     }`}>
                       {accounts[0].index > 1000000 ? (
                         <Users className="h-4 w-4 text-purple-600 dark:text-purple-400" />
@@ -221,7 +220,7 @@ export function AccountCheck({ address, onAccountFound, onNetworkChange }: Accou
                               'No public key'}
                           </div>
                         </div>
-                        <Badge className="bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20 shrink-0">
+                        <Badge className="bg-green-500/10 dark:bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20 shrink-0">
                           <Check className="h-3 w-3 mr-1" />
                           Active
                         </Badge>
@@ -241,14 +240,14 @@ export function AccountCheck({ address, onAccountFound, onNetworkChange }: Accou
                     <div
                       key={account.index}
                       onClick={() => handleAccountSelect(account.index)}
-                      className={`relative rounded-lg border-2 p-4 cursor-pointer transition-all duration-200 transform hover:scale-[1.02] ${
+                      className={`rounded-xl border p-4 cursor-pointer transition-all duration-200 ${
                         selectedAccountIndex === account.index
-                          ? 'border-primary bg-primary/5 shadow-lg'
-                          : 'border-border hover:border-primary/50 hover:shadow-md'
+                          ? 'border-primary dark:border-white bg-primary/5 dark:bg-white/5 shadow-sm scale-[1.02]'
+                          : 'border-border/40 dark:border-white/20 hover:border-foreground/30 dark:hover:border-white/30 hover:shadow-sm hover:scale-[1.01]'
                       }`}
                       style={{ animationDelay: `${index * 100}ms` }}
                     >
-                      <div className="relative flex items-center gap-3">
+                      <div className="flex items-center gap-3">
                         <div className={`p-2 rounded-lg transition-all duration-300 ${
                           isSubAccount ? 'bg-purple-500/10' : 'bg-blue-500/10'
                         } ${selectedAccountIndex === account.index ? 'scale-110' : ''}`}>
@@ -272,7 +271,7 @@ export function AccountCheck({ address, onAccountFound, onNetworkChange }: Accou
                               </div>
                             </div>
                             {selectedAccountIndex === account.index && (
-                              <Badge className="bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20 animate-in-scale shrink-0">
+                              <Badge className="bg-green-500/10 dark:bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20 animate-in-scale shrink-0">
                                 <Check className="h-3 w-3 mr-1" />
                                 Selected
                               </Badge>

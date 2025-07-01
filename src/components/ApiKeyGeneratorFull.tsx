@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
+import { copyToClipboard } from '@/lib/clipboard'
 import { 
   AlertCircle, 
   CheckCircle2, 
@@ -231,27 +232,18 @@ export function ApiKeyGeneratorFull({ accountIndex, network, onApiKeyGenerated }
     }
   }
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text)
-    toast({
-      title: "Copied!",
-      description: "Value copied to clipboard",
-    })
-  }
 
   return (
     <>
-      <Card className="card-hover shadow-glow animate-slide-up" style={{ animationDelay: '100ms' }}>
+      <Card className="card-hover shadow-glow animate-slide-up">
       <CardHeader className="p-6 sm:p-8 pb-4 sm:pb-6">
         <div className="space-y-2">
-          <CardTitle className="flex items-center gap-2.5 text-xl sm:text-2xl font-semibold">
-            <div className="p-2 rounded-lg bg-primary/10 transition-all duration-300 hover:bg-primary/20">
-              <Key className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-            </div>
+          <CardTitle className="flex items-center gap-2 text-xl sm:text-2xl font-bold tracking-tight">
+            <Key className="h-5 w-5 text-primary" />
             Generate API Key
-            <Badge variant="secondary" className="ml-auto text-xs bg-primary/10 border-primary/20">Full Crypto</Badge>
+            <Badge variant="secondary" className="ml-auto text-xs bg-primary/10 border-primary/20 font-mono animate-pulse-soft">Full Crypto</Badge>
           </CardTitle>
-          <CardDescription className="text-sm sm:text-base text-muted-foreground">
+          <CardDescription className="text-body-small text-secondary">
             Using Goldilocks field arithmetic, Poseidon2 hashing, and Schnorr signatures
           </CardDescription>
         </div>
@@ -293,7 +285,7 @@ export function ApiKeyGeneratorFull({ accountIndex, network, onApiKeyGenerated }
               <Button
                 onClick={handleSetupComplete}
                 disabled={loading}
-                className="w-full"
+                className="w-full shadow-sm hover:shadow-md transition-all hover-lift"
               >
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Continue
@@ -359,7 +351,7 @@ export function ApiKeyGeneratorFull({ accountIndex, network, onApiKeyGenerated }
                   variant="ghost"
                   size="icon"
                   className="h-6 w-6"
-                  onClick={() => copyToClipboard(generatedKeys.publicKey)}
+                  onClick={() => copyToClipboard(generatedKeys.publicKey, 'Public key')}
                 >
                   <Copy className="h-3 w-3" />
                 </Button>

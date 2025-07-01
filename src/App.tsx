@@ -1,21 +1,23 @@
 import { useState, useEffect } from 'react'
 import { ConnectKitButton } from 'connectkit'
-import { useAccount } from 'wagmi'
+import { useAccount, useDisconnect } from 'wagmi'
 import { ApiKeyGeneratorFull } from './components/ApiKeyGeneratorFull'
 import { AccountCheck } from './components/AccountCheck'
+import { BulkKeyGenerator } from './components/BulkKeyGenerator'
+import { MultiWalletKeyGenerator } from './components/MultiWalletKeyGenerator'
 import { ThemeProvider } from './components/theme-provider'
-import { ThemeToggle } from './components/theme-toggle'
-import { Card, CardContent } from '@/components/ui/card'
 import { Toaster } from '@/components/ui/toaster'
 import { Button } from '@/components/ui/button'
-import { useToast } from '@/hooks/use-toast'
-import { Sparkles, Copy, CheckCircle2, AlertTriangle, Link, Key, Hash, Layers, Eye, EyeOff } from 'lucide-react'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { copyToClipboard } from '@/lib/clipboard'
+import { Sparkles, Copy, Eye, EyeOff, LogOut, Key, Layers, Wallet } from 'lucide-react'
+import { ThemeToggle } from './components/theme-toggle'
 import { ConnectKitWrapper } from './components/ConnectKitWrapper'
 import { DomainWarning } from './components/DomainWarning'
 
 function App() {
   const { address, isConnected } = useAccount()
-  const { toast } = useToast()
+  const { disconnect } = useDisconnect()
   const [accountIndex, setAccountIndex] = useState<number | null>(null)
   const [selectedNetwork, setSelectedNetwork] = useState<'mainnet' | 'testnet'>('testnet')
   const [showPrivateKey, setShowPrivateKey] = useState(false)
@@ -41,56 +43,73 @@ function App() {
     setApiKeyData(null)
     setShowPrivateKey(false)
   }, [selectedNetwork, accountIndex])
-  
-  const copyToClipboard = (text: string, label: string) => {
-    navigator.clipboard.writeText(text)
-    toast({
-      title: "Copied!",
-      description: `${label} copied to clipboard`,
-    })
-  }
 
   return (
     <ThemeProvider defaultTheme="dark" storageKey="lighter-theme">
       <DomainWarning />
       <ConnectKitWrapper>
         <div className="min-h-screen bg-background flex flex-col">
-        <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <header className="fixed top-0 z-50 w-full bg-background border-b border-border">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex h-14 sm:h-16 items-center justify-between">
-              <a className="flex items-center space-x-2 transition-opacity hover:opacity-80" href="/">
-                <Sparkles className="h-5 w-5 sm:h-6 sm:w-6" />
-                <span className="font-semibold text-sm sm:text-base">Lighter Keys</span>
+            <div className="flex h-16 items-center justify-between">
+              <a className="flex items-center gap-2" href="/">
+                <Sparkles className="h-4 w-4" />
+                <span className="font-normal text-sm tracking-wide">Lighter</span>
               </a>
-              <nav className="flex items-center">
+              <div className="flex items-center gap-3">
+                {isConnected && address && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-body-small text-secondary font-mono">
+                      {address.slice(0, 6)}...{address.slice(-4)}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => disconnect()}
+                      className="text-body-small text-secondary hover:text-foreground -ml-1"
+                    >
+                      <LogOut className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
                 <ThemeToggle />
-              </nav>
+              </div>
             </div>
           </div>
         </header>
 
-        <main className="flex-1">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
-            <div className="mx-auto max-w-7xl">
-              <div className="text-center mb-12 sm:mb-16 lg:mb-20">
-                <div className="space-y-6 sm:space-y-8">
-                  <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight leading-[1.1]">
-                    <span className="block text-foreground/80">Generate API Keys for</span>
-                    <span className="gradient-text block mt-1 sm:mt-2">Lighter DEX</span>
-                  </h1>
-                  <p className="mx-auto max-w-[42rem] text-base sm:text-lg md:text-xl text-muted-foreground leading-[1.6] sm:leading-[1.7] md:leading-[1.8] px-4">
-                    Securely generate L2 API keys directly in your browser.
-                    <span className="block mt-1 text-sm sm:text-base opacity-80">No private keys leave your device.</span>
-                  </p>
-                </div>
+        <main className="flex-1 pt-16 relative overflow-hidden">
+          {/* Geometric shapes for visual interest */}
+          <div className="absolute top-20 right-10 shape-circle opacity-20"></div>
+          <div className="absolute bottom-40 left-20 shape-rectangle opacity-15 rotate-12"></div>
+          
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20 relative z-10">
+            <div className="mx-auto max-w-6xl">
+              <div className="mb-12 sm:mb-16">
+                <span className="badge-minimal mb-3 sm:mb-4 inline-block text-[10px] sm:text-[11px]">LIGHTER DEX</span>
+                <h1 className="serif-heading text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-normal mb-6 sm:mb-8 leading-tight sm:leading-normal">
+                  API Key<br />Generator
+                </h1>
               </div>
 
-              <div className="flex justify-center mb-12 sm:mb-16">
-                <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-primary/0 blur-xl" />
+              {!isConnected && (
+                <div className="mb-12">
                   <ConnectKitButton />
+                  <div className="mt-8 max-w-2xl">
+                    <p className="text-sm sm:text-body-small text-secondary leading-relaxed hidden sm:block">
+                      API key generation for Lighter DEX involves cryptographic operations and requires careful handling. Private keys generated are non-recoverable if lost. This tool operates entirely in your browser - no data is transmitted to external servers.
+                    </p>
+                    <div className="sm:hidden space-y-3">
+                      <p className="text-xs text-secondary leading-relaxed">
+                        API key generation for Lighter DEX involves cryptographic operations and requires careful handling.
+                      </p>
+                      <p className="text-xs text-secondary leading-relaxed">
+                        Private keys generated are non-recoverable if lost. This tool operates entirely in your browser - no data is transmitted to external servers.
+                      </p>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
               {isConnected && address && (
                 <div className="w-full max-w-4xl mx-auto space-y-6 sm:space-y-8">
                 <AccountCheck 
@@ -100,54 +119,79 @@ function App() {
                 />
                 
                 {accountIndex !== null && (
-                  <ApiKeyGeneratorFull 
-                    key={`${accountIndex}-${selectedNetwork}`}
-                    address={address} 
-                    accountIndex={accountIndex}
-                    network={selectedNetwork}
-                    onApiKeyGenerated={(data) => {
-                      setApiKeyData(data)
-                      setShowPrivateKey(false)
-                    }}
-                  />
+                  <Tabs defaultValue="generate" className="w-full">
+                    <TabsList className="flex w-full gap-8 p-0 bg-transparent border-0 h-auto mb-12 border-b border-border">
+                      <TabsTrigger value="generate" className="tab-text text-base data-[state=active]:border-b-2 data-[state=active]:border-foreground pb-4 rounded-none bg-transparent border-b-2 border-transparent transition-all duration-200 data-[state=active]:text-foreground text-secondary">
+                        <Key className="h-4 w-4 mr-2" />
+                        Generate
+                      </TabsTrigger>
+                      <TabsTrigger value="bulk" className="tab-text text-base data-[state=active]:border-b-2 data-[state=active]:border-foreground pb-4 rounded-none bg-transparent border-b-2 border-transparent transition-all duration-200 data-[state=active]:text-foreground text-secondary">
+                        <Layers className="h-4 w-4 mr-2" />
+                        Bulk
+                      </TabsTrigger>
+                      <TabsTrigger value="multi" className="tab-text text-base data-[state=active]:border-b-2 data-[state=active]:border-foreground pb-4 rounded-none bg-transparent border-b-2 border-transparent transition-all duration-200 data-[state=active]:text-foreground text-secondary">
+                        <Wallet className="h-4 w-4 mr-2" />
+                        Multi-Account
+                      </TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="generate" className="mt-6 animate-fade-in">
+                      <ApiKeyGeneratorFull 
+                        key={`${accountIndex}-${selectedNetwork}`}
+                        address={address} 
+                        accountIndex={accountIndex}
+                        network={selectedNetwork}
+                        onApiKeyGenerated={(data) => {
+                          setApiKeyData(data)
+                          setShowPrivateKey(false)
+                        }}
+                      />
+                    </TabsContent>
+                    
+                    <TabsContent value="bulk" className="mt-6 animate-fade-in">
+                      <BulkKeyGenerator
+                        address={address}
+                        accountIndex={accountIndex}
+                        network={selectedNetwork}
+                      />
+                    </TabsContent>
+                    
+                    <TabsContent value="multi" className="mt-6 animate-fade-in">
+                      <MultiWalletKeyGenerator
+                        network={selectedNetwork}
+                      />
+                    </TabsContent>
+                  </Tabs>
                 )}
                 
                   {apiKeyData && (
-                    <Card className="border border-green-500/20 shadow-glow-primary card-hover animate-slide-up">
-                      <CardContent className="p-4 sm:p-6">
-                        <div className="space-y-4 sm:space-y-6">
-                          <div className="flex items-start gap-2 sm:gap-3">
-                            <div className="p-2 rounded-lg bg-green-500/10 animate-in-scale">
-                              <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-green-500" />
-                            </div>
-                            <div className="min-w-0">
-                              <h3 className="text-base sm:text-lg font-semibold">
-                                API Key Generated Successfully
-                              </h3>
-                              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">
-                                Your API key has been created for {apiKeyData.network}
-                              </p>
-                            </div>
-                          </div>
+                    <div className="card-hover shadow-glow animate-slide-up rounded-lg p-8 mt-8">
+                      <div className="space-y-6">
+                        <div>
+                          <span className="mb-4 inline-block px-3 py-1 text-xs font-semibold uppercase tracking-wider rounded-full bg-green-100 dark:bg-green-500/10 text-green-800 dark:text-green-400 border border-green-200 dark:border-green-500/20">SUCCESS</span>
+                          <h3 className="serif-heading text-3xl">
+                            API Key Generated
+                          </h3>
+                          <p className="text-body-small text-secondary mt-2">
+                            Your key has been created for {apiKeyData.network}
+                          </p>
+                        </div>
                           
                           <div className="space-y-4">
                             <div className="space-y-2">
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <Link className="h-3.5 w-3.5" />
-                                <span>Base URL</span>
-                              </div>
-                              <div className="group relative flex items-center gap-2">
+                              <span className="text-body-small text-secondary font-medium">Base URL</span>
+                              <div className="flex items-center gap-2">
                                 <input
                                   readOnly
                                   value={apiKeyData.network === 'mainnet' 
                                     ? 'https://mainnet.zklighter.elliot.ai' 
                                     : 'https://testnet.zklighter.elliot.ai'}
-                                  className="flex-1 bg-muted/50 rounded-md px-2 sm:px-3 py-2 text-xs sm:text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring overflow-hidden text-ellipsis transition-all duration-200 hover:bg-muted/70"
+                                  className="flex-1 bg-transparent border border-white/20 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-white/40 transition-colors"
                                 />
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="shrink-0 transition-all duration-200 hover:scale-110"
+                                  className="shrink-0 text-secondary hover:text-foreground"
                                   onClick={() => copyToClipboard(
                                     apiKeyData.network === 'mainnet' 
                                       ? 'https://mainnet.zklighter.elliot.ai' 
@@ -155,105 +199,91 @@ function App() {
                                     'Base URL'
                                   )}
                                 >
-                                  <Copy className="h-3.5 w-3.5" />
+                                  <Copy className="h-4 w-4" />
                                 </Button>
                               </div>
                             </div>
                             
                             <div className="space-y-2">
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <Key className="h-3.5 w-3.5" />
-                                <span>Private Key</span>
-                              </div>
-                              <div className="group relative flex items-center gap-2">
+                              <span className="text-body-small text-secondary font-medium">Private Key</span>
+                              <div className="flex items-center gap-2">
                                 <input
                                   readOnly
                                   type={showPrivateKey ? "text" : "password"}
                                   value={apiKeyData.privateKey}
-                                  className="flex-1 bg-muted/50 rounded-md px-2 sm:px-3 py-2 text-xs sm:text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring overflow-hidden text-ellipsis"
+                                  className="flex-1 bg-transparent border border-white/20 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-white/40 transition-colors"
                                 />
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="shrink-0"
+                                  className="shrink-0 text-secondary hover:text-foreground"
                                   onClick={() => setShowPrivateKey(!showPrivateKey)}
                                 >
                                   {showPrivateKey ? (
-                                    <EyeOff className="h-3.5 w-3.5" />
+                                    <EyeOff className="h-4 w-4" />
                                   ) : (
-                                    <Eye className="h-3.5 w-3.5" />
+                                    <Eye className="h-4 w-4" />
                                   )}
                                 </Button>
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="shrink-0"
+                                  className="shrink-0 text-secondary hover:text-foreground"
                                   onClick={() => copyToClipboard(apiKeyData.privateKey, 'Private Key')}
                                 >
-                                  <Copy className="h-3.5 w-3.5" />
+                                  <Copy className="h-4 w-4" />
                                 </Button>
                               </div>
                             </div>
                             
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                            <div className="grid grid-cols-2 gap-6">
                               <div className="space-y-2">
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                  <Hash className="h-3.5 w-3.5" />
-                                  <span>Account Index</span>
-                                </div>
-                                <div className="group relative flex items-center gap-2">
+                                <span className="text-body-small text-secondary font-medium">Account Index</span>
+                                <div className="flex items-center gap-2">
                                   <input
                                     readOnly
                                     value={apiKeyData.accountIndex}
-                                    className="flex-1 bg-muted/50 rounded-md px-2 sm:px-3 py-2 text-xs sm:text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring overflow-hidden text-ellipsis"
+                                    className="flex-1 bg-transparent border border-white/20 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-white/40 transition-colors"
                                   />
                                   <Button
                                     variant="ghost"
                                     size="sm"
+                                    className="shrink-0 text-secondary hover:text-foreground"
                                     onClick={() => copyToClipboard(apiKeyData.accountIndex.toString(), 'Account Index')}
                                   >
-                                    <Copy className="h-3.5 w-3.5" />
+                                    <Copy className="h-4 w-4" />
                                   </Button>
                                 </div>
                               </div>
                               
                               <div className="space-y-2">
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                  <Layers className="h-3.5 w-3.5" />
-                                  <span>API Key Index</span>
-                                </div>
-                                <div className="group relative flex items-center gap-2">
+                                <span className="text-body-small text-secondary font-medium">API Key Index</span>
+                                <div className="flex items-center gap-2">
                                   <input
                                     readOnly
                                     value={apiKeyData.apiKeyIndex}
-                                    className="flex-1 bg-muted/50 rounded-md px-2 sm:px-3 py-2 text-xs sm:text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring overflow-hidden text-ellipsis"
+                                    className="flex-1 bg-transparent border border-white/20 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-white/40 transition-colors"
                                   />
                                   <Button
                                     variant="ghost"
                                     size="sm"
+                                    className="shrink-0 text-secondary hover:text-foreground"
                                     onClick={() => copyToClipboard(apiKeyData.apiKeyIndex.toString(), 'API Key Index')}
                                   >
-                                    <Copy className="h-3.5 w-3.5" />
+                                    <Copy className="h-4 w-4" />
                                   </Button>
                                 </div>
                               </div>
                             </div>
                           </div>
-                          
-                          <div className="mt-4 sm:mt-6 p-3 sm:p-4 rounded-lg bg-amber-500/5 border border-amber-500/20">
-                            <div className="flex gap-3">
-                              <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
-                              <div className="space-y-1 text-xs sm:text-sm">
-                                <p className="font-medium">Security Notice</p>
-                                <p className="text-muted-foreground leading-relaxed">
-                                  Save this configuration securely. The private key cannot be recovered if lost.
-                                </p>
-                              </div>
-                            </div>
-                          </div>
+                        
+                        <div className="border-t border-border dark:border-white/10 pt-4 mt-6">
+                          <p className="text-body-small text-secondary leading-relaxed">
+                            Save this configuration securely. The private key cannot be recovered if lost. Keys are generated using cryptographically secure methods and never leave your browser.
+                          </p>
                         </div>
-                      </CardContent>
-                    </Card>
+                      </div>
+                    </div>
                   )}
                 </div>
               )}
@@ -261,7 +291,7 @@ function App() {
           </div>
         </main>
 
-        <footer className="mt-auto border-t">
+        <footer className="mt-auto border-t border-border">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="relative flex flex-col sm:flex-row items-center justify-between gap-4 py-6">
               <p className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">

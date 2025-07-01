@@ -6,7 +6,7 @@ A browser-based tool for generating API keys for the Lighter DEX without exposin
 
 **Live Application**: [https://lighterkey.netlify.app/](https://lighterkey.netlify.app/)
 
-> **Note**: Lighter is adding official support for web-based API key generation soon. This community tool has been serving users in the meantime.
+**Note**: Lighter is adding official support for web-based API key generation soon. This community tool has been serving users in the meantime.
 
 ## Overview
 
@@ -18,14 +18,21 @@ This application allows users to generate and register Layer 2 API keys for Ligh
 - Wallet integration supporting MetaMask, Rabby, and other Web3 wallets  
 - WebAssembly implementation of Lighter's cryptographic library
 - Dark mode support with responsive design
+- Bulk key generation - create up to 20 API keys in a single session
+- Multi-account support - generate keys for multiple wallets with automatic switching
+- Privacy-focused - no data persistence or external storage
 
 ## How It Works
 
 1. Connect your Ethereum wallet to the application
 2. The app checks if you have an existing Lighter account
-3. Select your target API key index (1-255)
-4. Generate a new secure Layer 2 API key pair
-5. Sign and submit the transaction to register your new key
+3. Choose your generation method:
+   - **Single**: Generate one API key for your connected wallet
+   - **Bulk**: Generate multiple keys (1-20) for a single account
+   - **Multi-Account**: Generate keys across multiple wallets
+4. Select your target API key index (1-255)
+5. Generate secure Layer 2 API key pairs
+6. Sign and submit transactions to register your new keys
 
 ## Development
 
@@ -70,6 +77,8 @@ The application uses:
 ### Security
 
 All cryptographic operations are performed locally in the browser using WebAssembly. Private keys are never transmitted to any server. The application uses Lighter's official cryptographic library compiled to WASM to ensure compatibility and security.
+
+No user data, keys, or generation history is stored locally or remotely. Each session starts fresh to maximize privacy.
 
 ### API Key Management
 

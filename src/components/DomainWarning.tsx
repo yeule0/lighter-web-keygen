@@ -25,17 +25,17 @@ export function DomainWarning() {
   if (!show) return null
 
   return (
-    <Alert className="fixed top-4 left-4 right-4 z-[100] max-w-2xl mx-auto border-red-500 bg-red-500/10">
-      <AlertTriangle className="h-5 w-5 text-red-500" />
+    <Alert className="fixed top-4 left-4 right-4 z-[100] max-w-2xl mx-auto border-2 border-foreground dark:border-white bg-background dark:bg-black">
+      <AlertTriangle className="h-5 w-5" />
       <AlertDescription className="text-sm">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="font-semibold text-red-600 dark:text-red-400 mb-1">
+            <p className="font-semibold mb-1">
               Unofficial Domain Warning
             </p>
             <p className="text-muted-foreground">
-              You're accessing this app from <code className="text-xs bg-red-500/20 px-1 py-0.5 rounded">{currentDomain}</code>.
-              The official domain is <code className="text-xs bg-green-500/20 px-1 py-0.5 rounded">lighterkey.netlify.app</code>.
+              You're accessing this app from <code className="text-xs border border-foreground/30 dark:border-white/30 px-1 py-0.5 rounded font-mono">{currentDomain}</code>.
+              The official domain is <code className="text-xs border border-foreground/30 dark:border-white/30 px-1 py-0.5 rounded font-mono">lighterkey.netlify.app</code>.
               This could be a phishing attempt.
             </p>
           </div>
