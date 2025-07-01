@@ -3,3 +3,7 @@
   
 /*.js
   Content-Type: application/javascript
+
+/og-image.png
+  Cache-Control: public, max-age=31536000, immutable
+  Content-Type: image/png
