@@ -346,20 +346,20 @@ export function MultiWalletKeyGenerator({ network }: MultiWalletKeyGeneratorProp
         wallet.accounts.filter(account => {
           if (account.selected) {
             const idx = parseInt(account.customKeyIndex || '')
-            return isNaN(idx) || idx < 1 || idx > 255
+            return isNaN(idx) || idx < 0 || idx > 255
           }
           return false
         })
       )
       
       if (invalidAccounts.length > 0) {
-        setError('Please enter valid key indices (1-255) for all selected accounts')
+        setError('Please enter valid key indices (0-255) for all selected accounts')
         return
       }
     } else {
       const keyIndexNum = parseInt(keyIndex)
-      if (isNaN(keyIndexNum) || keyIndexNum < 1 || keyIndexNum > 255) {
-        setError('Please enter a valid key index between 1 and 255')
+      if (isNaN(keyIndexNum) || keyIndexNum < 0 || keyIndexNum > 255) {
+        setError('Please enter a valid key index between 0 and 255')
         return
       }
     }
@@ -739,7 +739,7 @@ export function MultiWalletKeyGenerator({ network }: MultiWalletKeyGeneratorProp
                                       setWallets(updatedWallets)
                                     }}
                                     onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                                    min="1"
+                                    min="0"
                                     max="255"
                                     placeholder="Key index"
                                     className="w-24 h-8 text-xs ml-auto"
@@ -791,12 +791,12 @@ export function MultiWalletKeyGenerator({ network }: MultiWalletKeyGeneratorProp
                     type="number"
                     value={keyIndex}
                     onChange={(e) => setKeyIndex(e.target.value)}
-                    min="1"
+                    min="0"
                     max="255"
                     placeholder="Enter key index (1-255)"
                   />
                   <p className="text-xs text-muted-foreground">
-                    The same key index will be used for all selected accounts
+                    The same key index will be used for all selected accounts. Index 0 is reserved for frontend use.
                   </p>
                 </div>
               )}
