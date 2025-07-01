@@ -165,28 +165,28 @@ function App() {
                 )}
                 
                   {apiKeyData && (
-                    <div className="card-hover shadow-glow animate-slide-up rounded-lg p-8 mt-8">
-                      <div className="space-y-6">
+                    <div className="card-hover shadow-glow animate-slide-up rounded-lg p-4 sm:p-6 lg:p-8 mt-6 sm:mt-8">
+                      <div className="space-y-4 sm:space-y-6">
                         <div>
-                          <span className="mb-4 inline-block px-3 py-1 text-xs font-semibold uppercase tracking-wider rounded-full bg-green-100 dark:bg-green-500/10 text-green-800 dark:text-green-400 border border-green-200 dark:border-green-500/20">SUCCESS</span>
-                          <h3 className="serif-heading text-3xl">
+                          <span className="mb-2 sm:mb-4 inline-block px-2.5 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-xs font-semibold uppercase tracking-wider rounded-full bg-green-100 dark:bg-green-500/10 text-green-800 dark:text-green-400 border border-green-200 dark:border-green-500/20">SUCCESS</span>
+                          <h3 className="serif-heading text-2xl sm:text-3xl">
                             API Key Generated
                           </h3>
-                          <p className="text-body-small text-secondary mt-2">
+                          <p className="text-sm sm:text-body-small text-secondary mt-1 sm:mt-2">
                             Your key has been created for {apiKeyData.network}
                           </p>
                         </div>
                           
-                          <div className="space-y-4">
-                            <div className="space-y-2">
-                              <span className="text-body-small text-secondary font-medium">Base URL</span>
-                              <div className="flex items-center gap-2">
+                          <div className="space-y-3 sm:space-y-4">
+                            <div className="space-y-1.5 sm:space-y-2">
+                              <span className="text-xs sm:text-body-small text-secondary font-medium">Base URL</span>
+                              <div className="flex items-center gap-1.5 sm:gap-2">
                                 <input
                                   readOnly
                                   value={apiKeyData.network === 'mainnet' 
                                     ? 'https://mainnet.zklighter.elliot.ai' 
                                     : 'https://testnet.zklighter.elliot.ai'}
-                                  className="flex-1 bg-transparent border border-white/20 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-white/40 transition-colors"
+                                  className="flex-1 bg-transparent border border-white/20 rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-mono focus:outline-none focus:border-white/40 transition-colors"
                                 />
                                 <Button
                                   variant="ghost"
@@ -204,14 +204,14 @@ function App() {
                               </div>
                             </div>
                             
-                            <div className="space-y-2">
-                              <span className="text-body-small text-secondary font-medium">Private Key</span>
-                              <div className="flex items-center gap-2">
+                            <div className="space-y-1.5 sm:space-y-2">
+                              <span className="text-xs sm:text-body-small text-secondary font-medium">Private Key</span>
+                              <div className="flex items-center gap-1.5 sm:gap-2">
                                 <input
                                   readOnly
                                   type={showPrivateKey ? "text" : "password"}
                                   value={apiKeyData.privateKey}
-                                  className="flex-1 bg-transparent border border-white/20 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-white/40 transition-colors"
+                                  className="flex-1 bg-transparent border border-white/20 rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-mono focus:outline-none focus:border-white/40 transition-colors"
                                 />
                                 <Button
                                   variant="ghost"
@@ -236,14 +236,14 @@ function App() {
                               </div>
                             </div>
                             
-                            <div className="grid grid-cols-2 gap-6">
-                              <div className="space-y-2">
-                                <span className="text-body-small text-secondary font-medium">Account Index</span>
-                                <div className="flex items-center gap-2">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6">
+                              <div className="space-y-1.5 sm:space-y-2">
+                                <span className="text-xs sm:text-body-small text-secondary font-medium">Account Index</span>
+                                <div className="flex items-center gap-1.5 sm:gap-2">
                                   <input
                                     readOnly
                                     value={apiKeyData.accountIndex}
-                                    className="flex-1 bg-transparent border border-white/20 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-white/40 transition-colors"
+                                    className="flex-1 bg-transparent border border-white/20 rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-mono focus:outline-none focus:border-white/40 transition-colors"
                                   />
                                   <Button
                                     variant="ghost"
@@ -256,13 +256,13 @@ function App() {
                                 </div>
                               </div>
                               
-                              <div className="space-y-2">
-                                <span className="text-body-small text-secondary font-medium">API Key Index</span>
-                                <div className="flex items-center gap-2">
+                              <div className="space-y-1.5 sm:space-y-2">
+                                <span className="text-xs sm:text-body-small text-secondary font-medium">API Key Index</span>
+                                <div className="flex items-center gap-1.5 sm:gap-2">
                                   <input
                                     readOnly
                                     value={apiKeyData.apiKeyIndex}
-                                    className="flex-1 bg-transparent border border-white/20 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-white/40 transition-colors"
+                                    className="flex-1 bg-transparent border border-white/20 rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-mono focus:outline-none focus:border-white/40 transition-colors"
                                   />
                                   <Button
                                     variant="ghost"
@@ -277,8 +277,8 @@ function App() {
                             </div>
                           </div>
                         
-                        <div className="border-t border-border dark:border-white/10 pt-4 mt-6">
-                          <p className="text-body-small text-secondary leading-relaxed">
+                        <div className="border-t border-border dark:border-white/10 pt-3 sm:pt-4 mt-4 sm:mt-6">
+                          <p className="text-xs sm:text-body-small text-secondary leading-relaxed">
                             Save this configuration securely. The private key cannot be recovered if lost. Keys are generated using cryptographically secure methods and never leave your browser.
                           </p>
                         </div>
