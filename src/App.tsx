@@ -99,12 +99,15 @@ function App() {
                     <p className="text-sm sm:text-body-small text-secondary leading-relaxed hidden sm:block">
                       API key generation for Lighter DEX involves cryptographic operations and requires careful handling. Private keys generated are non-recoverable if lost. This tool operates entirely in your browser no<br />data is transmitted to external servers.
                     </p>
-                    <div className="sm:hidden space-y-3">
+                    <div className="sm:hidden space-y-3 max-w-[70%]">
                       <p className="text-xs text-secondary leading-relaxed">
                         API key generation for Lighter DEX involves cryptographic operations and requires careful handling.
                       </p>
                       <p className="text-xs text-secondary leading-relaxed">
-                        Private keys generated are non-recoverable if lost. This tool operates entirely in your browser - no data is transmitted to external servers.
+                        Private keys generated are non-recoverable if lost. This tool operates entirely in your browser.
+                      </p>
+                      <p className="text-xs text-secondary leading-relaxed">
+                        No data is transmitted to external servers.
                       </p>
                     </div>
                   </div>
