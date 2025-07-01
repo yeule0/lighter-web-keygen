@@ -32,7 +32,9 @@ import {
   Hash,
   AlertTriangle,
   Plus,
-  Minus
+  Minus,
+  TrendingUp,
+  TrendingDown
 } from 'lucide-react'
 
 interface BulkKeyGeneratorProps {
@@ -52,6 +54,7 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
   const [currentKeyIndex, setCurrentKeyIndex] = useState(0)
   const [showPrivateKeys, setShowPrivateKeys] = useState<{ [key: number]: boolean }>({})
   const [isWaitingForRateLimit, setIsWaitingForRateLimit] = useState(false)
+  const [currentDelaySeconds, setCurrentDelaySeconds] = useState(3)
   
   const { signMessageAsync } = useSignMessage()
   const { chain } = useAccount()
@@ -67,6 +70,7 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
     setCurrentKeyIndex(0)
     setShowPrivateKeys({})
     setIsWaitingForRateLimit(false)
+    setCurrentDelaySeconds(3)
   }, [network])
 
   const networkConfig = {
@@ -111,6 +115,14 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
       const defaultKey = await crypto.getDefaultKey()
       await crypto.setCurrentKey(defaultKey.privateKey)
       
+      // Dynamic rate limiting configuration
+      let currentDelay = 3000 
+      const MIN_DELAY = 2000 
+      const MAX_DELAY = 15000 
+      const INCREASE_FACTOR = 2.0 
+      const DECREASE_FACTOR = 0.8 
+      setCurrentDelaySeconds(3) 
+      
       setCurrentStep('processing')
       const keyPairs = await Promise.all(
         Array.from({ length: count }, async (_, i) => {
@@ -137,7 +149,8 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
       const nonces = await Promise.all(noncePromises)
       const nonceMap = new Map(nonces.map(n => [n.keyIndex, n.nonce]))
       
-      for (let i = 0; i < count; i++) {
+      let i = 0
+      while (i < count) {
         const keyIndex = startIndex + i
         setCurrentKeyIndex(keyIndex)
         setProgress(((i + 1) / count) * 100)
@@ -201,13 +214,45 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
         
         if (!response.ok) {
           let errorMessage = `Failed to register key ${keyIndex}`
+          let isRateLimited = false
+          
+          
+          if (response.status === 429 || response.status === 503) {
+            isRateLimited = true
+            
+            currentDelay = Math.min(currentDelay * INCREASE_FACTOR, MAX_DELAY)
+            setCurrentDelaySeconds(Math.round(currentDelay / 1000))
+          }
+          
           try {
             const errorData = JSON.parse(responseText)
             errorMessage = errorData.message || errorData.error || errorMessage
+            // Also check for rate limit messages in the response
+            if (errorMessage.toLowerCase().includes('rate limit') || 
+                errorMessage.toLowerCase().includes('too many request') ||
+                errorMessage.toLowerCase().includes('ratelimit')) {
+              isRateLimited = true
+              currentDelay = Math.min(currentDelay * INCREASE_FACTOR, MAX_DELAY)
+              setCurrentDelaySeconds(Math.round(currentDelay / 1000))
+            }
           } catch {
           }
+          
+          
+          if (isRateLimited) {
+            console.log(`Rate limited. Increasing delay to ${currentDelay}ms`)
+            setIsWaitingForRateLimit(true)
+            await new Promise(resolve => setTimeout(resolve, currentDelay))
+            setIsWaitingForRateLimit(false)
+            continue 
+          }
+          
           throw new Error(errorMessage)
         }
+        
+        // Success! Decrease delay for next request
+        currentDelay = Math.max(currentDelay * DECREASE_FACTOR, MIN_DELAY)
+        setCurrentDelaySeconds(Math.round(currentDelay / 1000))
         
         // Wait a bit for transaction to be processed before next one
         await new Promise(resolve => setTimeout(resolve, 2000))
@@ -221,11 +266,12 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
           network
         })
 
-        if (i < count - 1) {
-          setCurrentKeyIndex(keyIndex)
-          setProgress(((i + 1) / count) * 100)
+        // Move to next key
+        i++
+        
+        if (i < count) {
           setIsWaitingForRateLimit(true)
-          await new Promise(resolve => setTimeout(resolve, 10000)) 
+          await new Promise(resolve => setTimeout(resolve, currentDelay)) 
           setIsWaitingForRateLimit(false)
         }
 
@@ -430,9 +476,24 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">
                 {isWaitingForRateLimit 
-                  ? 'Adding a 10-second delay between keys to respect API rate limits.'
+                  ? `Adding a ${currentDelaySeconds}-second delay between keys to respect API rate limits.`
                   : 'Please approve each signature request in your wallet.'}
               </p>
+              {currentDelaySeconds !== 3 && (
+                <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                  {currentDelaySeconds > 3 ? (
+                    <>
+                      <TrendingUp className="h-3 w-3 text-orange-500" />
+                      <span>Delay increased due to rate limiting</span>
+                    </>
+                  ) : (
+                    <>
+                      <TrendingDown className="h-3 w-3 text-green-500" />
+                      <span>Delay decreased due to successful requests</span>
+                    </>
+                  )}
+                </div>
+              )}
               <p className="text-xs text-muted-foreground">
                 Each key requires a separate transaction. You may need to switch to Ethereum mainnet for signatures.
               </p>

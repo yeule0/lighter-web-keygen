@@ -28,7 +28,9 @@ import {
   Plus,
   Trash2,
   Info,
-  RefreshCw
+  RefreshCw,
+  TrendingUp,
+  TrendingDown
 } from 'lucide-react'
 
 interface MultiWalletKeyGeneratorProps {
@@ -79,6 +81,7 @@ export function MultiWalletKeyGenerator({ network }: MultiWalletKeyGeneratorProp
   const [currentOperation, setCurrentOperation] = useState<string>('')
   const [showPrivateKeys, setShowPrivateKeys] = useState<{ [key: string]: boolean }>({})
   const [processingStatus, setProcessingStatus] = useState<string>('')
+  const [currentDelaySeconds, setCurrentDelaySeconds] = useState(3)
   
   const { address: connectedAddress, connector } = useAccount()
   const { signMessageAsync } = useSignMessage()
@@ -108,6 +111,7 @@ export function MultiWalletKeyGenerator({ network }: MultiWalletKeyGeneratorProp
     setCurrentOperation('')
     setShowPrivateKeys({})
     setProcessingStatus('')
+    setCurrentDelaySeconds(3)
   }, [network])
 
   useEffect(() => {
@@ -373,6 +377,14 @@ export function MultiWalletKeyGenerator({ network }: MultiWalletKeyGeneratorProp
     try {
       const keys: GeneratedKeyResult[] = []
       
+      // Dynamic rate limiting configuration
+      let currentDelay = 3000 
+      const MIN_DELAY = 2000 
+      const MAX_DELAY = 15000 
+      const INCREASE_FACTOR = 2.0 
+      const DECREASE_FACTOR = 0.8 
+      setCurrentDelaySeconds(3) 
+      
       // Group accounts by wallet address
       const accountsByWallet = new Map<string, AccountToGenerate[]>()
       selectedAccounts.forEach(account => {
@@ -414,26 +426,46 @@ export function MultiWalletKeyGenerator({ network }: MultiWalletKeyGeneratorProp
         const defaultKey = await crypto.getDefaultKey()
         await crypto.setCurrentKey(defaultKey.privateKey)
 
-        // Process each account for this wallet
-        for (const account of accounts) {
+        
+        setCurrentOperation(`Generating ${accounts.length} keys for wallet ${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`)
+        const keyPairs = await Promise.all(
+          accounts.map(async () => {
+            const keyPair = await crypto.generateApiKey()
+            return keyPair
+          })
+        )
+
+        
+        setCurrentOperation(`Fetching nonces for wallet ${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`)
+        const noncePromises = accounts.map((account) => {
+          const nonceUrl = `${networkConfig[network].url}/api/v1/nextNonce?account_index=${account.accountIndex}&api_key_index=${account.keyIndex}`
+          return fetch(nonceUrl)
+            .then(res => {
+              if (!res.ok) {
+                return res.text().then(text => {
+                  throw new Error(`Failed to fetch nonce for account ${account.accountIndex}: ${res.status} ${text}`)
+                })
+              }
+              return res.json()
+            })
+            .then(data => ({ 
+              key: `${account.accountIndex}-${account.keyIndex}`,
+              nonce: data.nonce 
+            }))
+        })
+        
+        const nonces = await Promise.all(noncePromises)
+        const nonceMap = new Map(nonces.map(n => [n.key, n.nonce]))
+
+        
+        for (let i = 0; i < accounts.length; i++) {
+          const account = accounts[i]
+          const keyPair = keyPairs[i]
+          const nonce = nonceMap.get(`${account.accountIndex}-${account.keyIndex}`)
+          
           processedCount++
           setProgress((processedCount / totalAccounts) * 100)
-          setCurrentOperation(`Generating key for Account #${account.accountIndex} (Key Index: ${account.keyIndex}) of ${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`)
-
-          // Generate the key
-          const keyPair = await crypto.generateApiKey()
-
-          // Fetch fresh nonce
-          const nonceUrl = `${networkConfig[network].url}/api/v1/nextNonce?account_index=${account.accountIndex}&api_key_index=${account.keyIndex}`
-          const nonceResponse = await fetch(nonceUrl)
-          
-          if (!nonceResponse.ok) {
-            const errorText = await nonceResponse.text()
-            throw new Error(`Failed to fetch nonce: ${nonceResponse.status} ${errorText}`)
-          }
-          
-          const nonceData = await nonceResponse.json()
-          const nonce = nonceData.nonce
+          setCurrentOperation(`Processing Account #${account.accountIndex} (Key Index: ${account.keyIndex}) of ${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`)
           
           const MAX_TIMESTAMP = 281474976710655
           const TEN_MINUTES = 10 * 60 * 1000
@@ -489,24 +521,54 @@ export function MultiWalletKeyGenerator({ network }: MultiWalletKeyGeneratorProp
             body: formData
           })
 
+          const responseText = await response.text()
+          
           if (!response.ok) {
-            const responseText = await response.text()
             let errorMessage = `Failed to register key for account ${account.accountIndex}`
+            let isRateLimited = false
+            
+            
+            if (response.status === 429 || response.status === 503) {
+              isRateLimited = true
+              currentDelay = Math.min(currentDelay * INCREASE_FACTOR, MAX_DELAY)
+              setCurrentDelaySeconds(Math.round(currentDelay / 1000))
+            }
+            
             try {
               const errorData = JSON.parse(responseText)
               errorMessage = errorData.message || errorData.error || errorMessage
+              if (errorMessage.toLowerCase().includes('rate limit') || 
+                  errorMessage.toLowerCase().includes('too many request') ||
+                  errorMessage.toLowerCase().includes('ratelimit')) {
+                isRateLimited = true
+                currentDelay = Math.min(currentDelay * INCREASE_FACTOR, MAX_DELAY)
+                setCurrentDelaySeconds(Math.round(currentDelay / 1000))
+              }
             } catch {
             }
-            throw new Error(errorMessage)
+            
+            
+            if (isRateLimited) {
+              console.log(`Rate limited. Increasing delay to ${currentDelay}ms`)
+              setCurrentOperation(`Rate limited. Waiting ${Math.round(currentDelay / 1000)} seconds before continuing...`)
+              await new Promise(resolve => setTimeout(resolve, currentDelay))
+              continue
+            } else {
+              throw new Error(errorMessage)
+            }
           }
+          
+          
+          currentDelay = Math.max(currentDelay * DECREASE_FACTOR, MIN_DELAY)
+          setCurrentDelaySeconds(Math.round(currentDelay / 1000))
           
           // Wait for transaction to be processed
           await new Promise(resolve => setTimeout(resolve, 2000))
           
-          // Add rate limit delay between accounts (except for the last one)
+          
           if (processedCount < totalAccounts) {
-            setCurrentOperation('Waiting to avoid rate limits...')
-            await new Promise(resolve => setTimeout(resolve, 10000)) // 10 second delay
+            setCurrentOperation(`Waiting ${currentDelaySeconds} seconds to avoid rate limits...`)
+            await new Promise(resolve => setTimeout(resolve, currentDelay))
           }
           
           // Add to successful keys
@@ -855,6 +917,22 @@ export function MultiWalletKeyGenerator({ network }: MultiWalletKeyGeneratorProp
                   {currentOperation}
                 </AlertDescription>
               </Alert>
+            )}
+            
+            {currentDelaySeconds !== 3 && (
+              <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                {currentDelaySeconds > 3 ? (
+                  <>
+                    <TrendingUp className="h-3 w-3 text-orange-500" />
+                    <span>Delay increased to {currentDelaySeconds}s due to rate limiting</span>
+                  </>
+                ) : (
+                  <>
+                    <TrendingDown className="h-3 w-3 text-green-500" />
+                    <span>Delay decreased to {currentDelaySeconds}s due to successful requests</span>
+                  </>
+                )}
+              </div>
             )}
 
             <div className="rounded-xl border border-border/40 dark:border-white/10 p-4 sm:p-6 bg-muted/30 dark:bg-white/[0.02]">
