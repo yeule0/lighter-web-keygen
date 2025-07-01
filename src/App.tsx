@@ -345,7 +345,7 @@ function App() {
               
                 <div className="flex items-center gap-3">
                   <span className="text-xs sm:text-sm text-muted-foreground">
-                    Made by yeule0
+                    Made by Yeule0
                   </span>
                   <div className="flex items-center gap-2">
                     <a
