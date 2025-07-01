@@ -111,26 +111,39 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
       const defaultKey = await crypto.getDefaultKey()
       await crypto.setCurrentKey(defaultKey.privateKey)
       
-      // Process each key sequentially
+      setCurrentStep('processing')
+      const keyPairs = await Promise.all(
+        Array.from({ length: count }, async (_, i) => {
+          const keyPair = await crypto.generateApiKey()
+          return { keyPair, index: i }
+        })
+      )
+      
+      const noncePromises = Array.from({ length: count }, (_, i) => {
+        const keyIndex = startIndex + i
+        const nonceUrl = `${networkConfig[network].url}/api/v1/nextNonce?account_index=${accountIndex}&api_key_index=${keyIndex}`
+        return fetch(nonceUrl)
+          .then(res => {
+            if (!res.ok) {
+              return res.text().then(text => {
+                throw new Error(`Failed to fetch nonce for key ${keyIndex}: ${res.status} ${text}`)
+              })
+            }
+            return res.json()
+          })
+          .then(data => ({ keyIndex, nonce: data.nonce }))
+      })
+      
+      const nonces = await Promise.all(noncePromises)
+      const nonceMap = new Map(nonces.map(n => [n.keyIndex, n.nonce]))
+      
       for (let i = 0; i < count; i++) {
         const keyIndex = startIndex + i
         setCurrentKeyIndex(keyIndex)
         setProgress(((i + 1) / count) * 100)
 
-        // Generate the key
-        const keyPair = await crypto.generateApiKey()
-
-        // Fetch fresh nonce for this specific key
-        const nonceUrl = `${networkConfig[network].url}/api/v1/nextNonce?account_index=${accountIndex}&api_key_index=${keyIndex}`
-        const nonceResponse = await fetch(nonceUrl)
-        
-        if (!nonceResponse.ok) {
-          const errorText = await nonceResponse.text()
-          throw new Error(`Failed to fetch nonce for key ${keyIndex}: ${nonceResponse.status} ${errorText}`)
-        }
-        
-        const nonceData = await nonceResponse.json()
-        const nonce = nonceData.nonce
+        const { keyPair } = keyPairs[i]
+        const nonce = nonceMap.get(keyIndex)
         
         const MAX_TIMESTAMP = 281474976710655
         const TEN_MINUTES = 10 * 60 * 1000
