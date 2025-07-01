@@ -186,7 +186,7 @@ function App() {
                                   value={apiKeyData.network === 'mainnet' 
                                     ? 'https://mainnet.zklighter.elliot.ai' 
                                     : 'https://testnet.zklighter.elliot.ai'}
-                                  className="flex-1 bg-transparent border border-white/20 rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-mono focus:outline-none focus:border-white/40 transition-colors"
+                                  className="flex-1 bg-transparent border border-gray-300 dark:border-white/20 rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-mono focus:outline-none focus:border-gray-400 dark:focus:border-white/40 transition-colors"
                                 />
                                 <Button
                                   variant="ghost"
@@ -211,7 +211,7 @@ function App() {
                                   readOnly
                                   type={showPrivateKey ? "text" : "password"}
                                   value={apiKeyData.privateKey}
-                                  className="flex-1 bg-transparent border border-white/20 rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-mono focus:outline-none focus:border-white/40 transition-colors"
+                                  className="flex-1 bg-transparent border border-gray-300 dark:border-white/20 rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-mono focus:outline-none focus:border-gray-400 dark:focus:border-white/40 transition-colors"
                                 />
                                 <Button
                                   variant="ghost"
@@ -243,7 +243,7 @@ function App() {
                                   <input
                                     readOnly
                                     value={apiKeyData.accountIndex}
-                                    className="flex-1 bg-transparent border border-white/20 rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-mono focus:outline-none focus:border-white/40 transition-colors"
+                                    className="flex-1 bg-transparent border border-gray-300 dark:border-white/20 rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-mono focus:outline-none focus:border-gray-400 dark:focus:border-white/40 transition-colors"
                                   />
                                   <Button
                                     variant="ghost"
@@ -262,7 +262,7 @@ function App() {
                                   <input
                                     readOnly
                                     value={apiKeyData.apiKeyIndex}
-                                    className="flex-1 bg-transparent border border-white/20 rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-mono focus:outline-none focus:border-white/40 transition-colors"
+                                    className="flex-1 bg-transparent border border-gray-300 dark:border-white/20 rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-mono focus:outline-none focus:border-gray-400 dark:focus:border-white/40 transition-colors"
                                   />
                                   <Button
                                     variant="ghost"
