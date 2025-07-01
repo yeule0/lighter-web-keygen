@@ -11,6 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { useToast } from '@/hooks/use-toast'
 import { copyToClipboard } from '@/lib/clipboard'
 import { Progress } from '@/components/ui/progress'
+import { Label } from '@/components/ui/label'
 import { 
   AlertCircle, 
   CheckCircle2, 
@@ -30,7 +31,9 @@ import {
   Info,
   RefreshCw,
   TrendingUp,
-  TrendingDown
+  TrendingDown,
+  ChevronDown,
+  Settings2
 } from 'lucide-react'
 
 interface MultiWalletKeyGeneratorProps {
@@ -82,6 +85,9 @@ export function MultiWalletKeyGenerator({ network }: MultiWalletKeyGeneratorProp
   const [showPrivateKeys, setShowPrivateKeys] = useState<{ [key: string]: boolean }>({})
   const [processingStatus, setProcessingStatus] = useState<string>('')
   const [currentDelaySeconds, setCurrentDelaySeconds] = useState(3)
+  const [useManualRateLimit, setUseManualRateLimit] = useState(false)
+  const [manualDelaySeconds, setManualDelaySeconds] = useState('5')
+  const [showAdvancedSettings, setShowAdvancedSettings] = useState(false)
   
   const { address: connectedAddress, connector } = useAccount()
   const { signMessageAsync } = useSignMessage()
@@ -112,6 +118,9 @@ export function MultiWalletKeyGenerator({ network }: MultiWalletKeyGeneratorProp
     setShowPrivateKeys({})
     setProcessingStatus('')
     setCurrentDelaySeconds(3)
+    setUseManualRateLimit(false)
+    setManualDelaySeconds('5')
+    setShowAdvancedSettings(false)
   }, [network])
 
   useEffect(() => {
@@ -377,13 +386,13 @@ export function MultiWalletKeyGenerator({ network }: MultiWalletKeyGeneratorProp
     try {
       const keys: GeneratedKeyResult[] = []
       
-      // Dynamic rate limiting configuration
-      let currentDelay = 3000 
+      // Rate limiting configuration
+      let currentDelay = useManualRateLimit ? parseInt(manualDelaySeconds) * 1000 : 3000
       const MIN_DELAY = 2000 
       const MAX_DELAY = 15000 
       const INCREASE_FACTOR = 2.0 
       const DECREASE_FACTOR = 0.8 
-      setCurrentDelaySeconds(3) 
+      setCurrentDelaySeconds(useManualRateLimit ? parseInt(manualDelaySeconds) : 3) 
       
       // Group accounts by wallet address
       const accountsByWallet = new Map<string, AccountToGenerate[]>()
@@ -530,8 +539,10 @@ export function MultiWalletKeyGenerator({ network }: MultiWalletKeyGeneratorProp
             
             if (response.status === 429 || response.status === 503) {
               isRateLimited = true
-              currentDelay = Math.min(currentDelay * INCREASE_FACTOR, MAX_DELAY)
-              setCurrentDelaySeconds(Math.round(currentDelay / 1000))
+              if (!useManualRateLimit) {
+                currentDelay = Math.min(currentDelay * INCREASE_FACTOR, MAX_DELAY)
+                setCurrentDelaySeconds(Math.round(currentDelay / 1000))
+              }
             }
             
             try {
@@ -541,8 +552,10 @@ export function MultiWalletKeyGenerator({ network }: MultiWalletKeyGeneratorProp
                   errorMessage.toLowerCase().includes('too many request') ||
                   errorMessage.toLowerCase().includes('ratelimit')) {
                 isRateLimited = true
-                currentDelay = Math.min(currentDelay * INCREASE_FACTOR, MAX_DELAY)
-                setCurrentDelaySeconds(Math.round(currentDelay / 1000))
+                if (!useManualRateLimit) {
+                  currentDelay = Math.min(currentDelay * INCREASE_FACTOR, MAX_DELAY)
+                  setCurrentDelaySeconds(Math.round(currentDelay / 1000))
+                }
               }
             } catch {
             }
@@ -559,8 +572,11 @@ export function MultiWalletKeyGenerator({ network }: MultiWalletKeyGeneratorProp
           }
           
           
-          currentDelay = Math.max(currentDelay * DECREASE_FACTOR, MIN_DELAY)
-          setCurrentDelaySeconds(Math.round(currentDelay / 1000))
+          // Success! Decrease delay for next request (only if not using manual rate limit)
+          if (!useManualRateLimit) {
+            currentDelay = Math.max(currentDelay * DECREASE_FACTOR, MIN_DELAY)
+            setCurrentDelaySeconds(Math.round(currentDelay / 1000))
+          }
           
           // Wait for transaction to be processed
           await new Promise(resolve => setTimeout(resolve, 2000))
@@ -873,6 +889,60 @@ export function MultiWalletKeyGenerator({ network }: MultiWalletKeyGeneratorProp
               )}
             </div>
 
+            {/* Advanced Settings */}
+            <div className="space-y-4">
+              <button
+                type="button"
+                onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
+                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <Settings2 className="h-4 w-4" />
+                <span>Advanced Settings</span>
+                <ChevronDown className={`h-4 w-4 transition-transform ${showAdvancedSettings ? 'rotate-180' : ''}`} />
+              </button>
+              
+              {showAdvancedSettings && (
+                <div className="rounded-lg border border-border/40 p-4 space-y-4 bg-muted/30">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="manual-rate-limit-multi">Manual Rate Limiting</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Override dynamic rate limiting with a fixed delay
+                      </p>
+                    </div>
+                    <Checkbox
+                      id="manual-rate-limit-multi"
+                      checked={useManualRateLimit}
+                      onCheckedChange={(checked) => setUseManualRateLimit(checked as boolean)}
+                    />
+                  </div>
+                  
+                  {useManualRateLimit && (
+                    <div className="space-y-2">
+                      <Label htmlFor="manual-delay-multi">Delay between requests (seconds)</Label>
+                      <Input
+                        id="manual-delay-multi"
+                        type="number"
+                        value={manualDelaySeconds}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value)
+                          if (value >= 2 && value <= 60) {
+                            setManualDelaySeconds(e.target.value)
+                          }
+                        }}
+                        min="2"
+                        max="60"
+                        placeholder="2-60 seconds"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        All requests will use this fixed delay (minimum 2s, maximum 60s)
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
             <Button
               onClick={handleGenerateKeys}
               disabled={loading || selectedAccounts.length === 0}
@@ -919,7 +989,7 @@ export function MultiWalletKeyGenerator({ network }: MultiWalletKeyGeneratorProp
               </Alert>
             )}
             
-            {currentDelaySeconds !== 3 && (
+            {!useManualRateLimit && currentDelaySeconds !== 3 && (
               <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
                 {currentDelaySeconds > 3 ? (
                   <>
@@ -933,6 +1003,11 @@ export function MultiWalletKeyGenerator({ network }: MultiWalletKeyGeneratorProp
                   </>
                 )}
               </div>
+            )}
+            {useManualRateLimit && (
+              <p className="text-xs text-muted-foreground text-center">
+                Using manual rate limit: {manualDelaySeconds}s delay
+              </p>
             )}
 
             <div className="rounded-xl border border-border/40 dark:border-white/10 p-4 sm:p-6 bg-muted/30 dark:bg-white/[0.02]">
