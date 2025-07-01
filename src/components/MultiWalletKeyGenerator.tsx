@@ -266,7 +266,7 @@ export function MultiWalletKeyGenerator({ network }: MultiWalletKeyGeneratorProp
             ? parseInt(account.customKeyIndex) 
             : parseInt(keyIndex)
           
-          if (!isNaN(keyIndexNum) && keyIndexNum >= 1 && keyIndexNum <= 255) {
+          if (!isNaN(keyIndexNum) && keyIndexNum >= 0 && keyIndexNum <= 255) {
             selected.push({
               walletAddress: wallet.address,
               accountIndex: account.accountIndex,
