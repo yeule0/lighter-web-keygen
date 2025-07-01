@@ -534,7 +534,7 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
                           </div>
                         </div>
                         
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                        <div className="flex flex-col gap-3">
                           <div className="space-y-1.5 sm:space-y-2">
                             <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-muted-foreground">
                               <Hash className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />

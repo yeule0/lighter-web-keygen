@@ -1006,17 +1006,17 @@ export function MultiWalletKeyGenerator({ network }: MultiWalletKeyGeneratorProp
                           </div>
                         </div>
                         
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <Hash className="h-3.5 w-3.5" />
+                        <div className="flex flex-col gap-3">
+                          <div className="space-y-1.5 sm:space-y-2">
+                            <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-muted-foreground">
+                              <Hash className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
                               <span>Account Index</span>
                             </div>
-                            <div className="group relative flex items-center gap-2">
+                            <div className="group relative flex items-center gap-1.5 sm:gap-2">
                               <input
                                 readOnly
                                 value={key.accountIndex}
-                                className="flex-1 bg-muted/50 rounded-md px-2 sm:px-3 py-2 text-xs sm:text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring"
+                                className="flex-1 min-w-0 bg-muted/50 rounded-md px-2 sm:px-3 py-1.5 sm:py-2 text-[11px] sm:text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring"
                               />
                               <Button
                                 variant="ghost"
