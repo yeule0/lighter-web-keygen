@@ -97,10 +97,8 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
     setGeneratedKeys([])
 
     try {
-      // Check if on correct network
-      const targetChainId = networkConfig[network].chainId
-      if (chain?.id !== targetChainId) {
-        await switchChainAsync({ chainId: targetChainId })
+      if (chain?.id !== mainnet.id) {
+        await switchChainAsync({ chainId: mainnet.id })
       }
       const keys: BulkGenerationResult[] = []
       const crypto = await LighterFullCrypto.initialize()
@@ -206,11 +204,6 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
           network
         })
 
-      }
-
-      // Switch back to target network after all keys are processed
-      if (chain && chain.id !== targetChainId) {
-        await switchChainAsync({ chainId: targetChainId })
       }
       
       setGeneratedKeys(keys)
