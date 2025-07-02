@@ -12,6 +12,8 @@ import { copyToClipboard } from '@/lib/clipboard'
 import { Progress } from '@/components/ui/progress'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
+import { WalletKeyVault } from '@/components/WalletKeyVault'
+import { Dialog, DialogContent } from '@/components/ui/dialog'
 
 interface BulkGenerationResult {
   privateKey: string
@@ -38,7 +40,8 @@ import {
   TrendingUp,
   TrendingDown,
   ChevronDown,
-  Settings2
+  Settings2,
+  Shield
 } from 'lucide-react'
 
 interface BulkKeyGeneratorProps {
@@ -62,6 +65,7 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
   const [useManualRateLimit, setUseManualRateLimit] = useState(false)
   const [manualDelaySeconds, setManualDelaySeconds] = useState('5')
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false)
+  const [showVaultDialog, setShowVaultDialog] = useState(false)
   
   const { signMessageAsync } = useSignMessage()
   const { chain } = useAccount()
@@ -332,7 +336,8 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
   }
 
   return (
-    <Card className="card-hover shadow-glow animate-slide-up">
+    <>
+      <Card className="card-hover shadow-glow animate-slide-up">
       <CardHeader className="p-6 sm:p-8 pb-4 sm:pb-6">
         <div className="space-y-2">
           <CardTitle className="flex items-center gap-2 text-xl sm:text-2xl font-medium tracking-tight">
@@ -595,6 +600,15 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
                 <Download className="mr-2 h-4 w-4" />
                 Download All
               </Button>
+              <Button
+                variant="outline"
+                size="default"
+                onClick={() => setShowVaultDialog(true)}
+                className="flex-1"
+              >
+                <Shield className="mr-2 h-4 w-4" />
+                Encrypt Keys
+              </Button>
             </div>
 
             <div className="space-y-4 max-h-[600px] overflow-y-auto">
@@ -759,5 +773,23 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
         )}
       </CardContent>
     </Card>
+
+    <Dialog 
+      open={showVaultDialog} 
+      onOpenChange={setShowVaultDialog}
+      modal={false}  
+    >
+      <DialogContent 
+        className="max-w-md"
+        onPointerDownOutside={(e) => e.preventDefault()}  
+        onEscapeKeyDown={(e) => e.preventDefault()}  
+      >
+        <WalletKeyVault 
+          keys={generatedKeys}
+          label="Bulk Generated Keys"
+        />
+      </DialogContent>
+    </Dialog>
+    </>
   )
 }

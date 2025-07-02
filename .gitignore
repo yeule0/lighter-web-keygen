@@ -52,6 +52,7 @@ coverage/
 
 
 *.pem
+certs/
 .vercel
 .netlify
 

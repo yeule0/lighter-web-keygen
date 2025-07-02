@@ -5,12 +5,13 @@ import { ApiKeyGeneratorFull } from './components/ApiKeyGeneratorFull'
 import { AccountCheck } from './components/AccountCheck'
 import { BulkKeyGenerator } from './components/BulkKeyGenerator'
 import { MultiWalletKeyGenerator } from './components/MultiWalletKeyGenerator'
+import { WalletKeyRetriever } from './components/WalletKeyRetriever'
 import { ThemeProvider } from './components/theme-provider'
 import { Toaster } from '@/components/ui/toaster'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { copyToClipboard } from '@/lib/clipboard'
-import { Sparkles, Copy, Eye, EyeOff, LogOut, Key, Layers, Wallet } from 'lucide-react'
+import { Sparkles, Copy, Eye, EyeOff, LogOut, Key, Layers, Wallet, Unlock } from 'lucide-react'
 import { ThemeToggle } from './components/theme-toggle'
 import { ConnectKitWrapper } from './components/ConnectKitWrapper'
 import { DomainWarning } from './components/DomainWarning'
@@ -136,6 +137,10 @@ function App() {
                         <Wallet className="h-4 w-4 mr-2" />
                         Multi-Account
                       </TabsTrigger>
+                      <TabsTrigger value="vault" className="tab-text text-base data-[state=active]:border-b-2 data-[state=active]:border-foreground pb-4 rounded-none bg-transparent border-b-2 border-transparent transition-all duration-200 data-[state=active]:text-foreground text-secondary">
+                        <Unlock className="h-4 w-4 mr-2" />
+                        Decrypt Vault
+                      </TabsTrigger>
                     </TabsList>
                     
                     <TabsContent value="generate" className="mt-6 animate-fade-in">
@@ -163,6 +168,10 @@ function App() {
                       <MultiWalletKeyGenerator
                         network={selectedNetwork}
                       />
+                    </TabsContent>
+                    
+                    <TabsContent value="vault" className="mt-6 animate-fade-in">
+                      <WalletKeyRetriever />
                     </TabsContent>
                   </Tabs>
                 )}

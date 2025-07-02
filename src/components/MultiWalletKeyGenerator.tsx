@@ -12,6 +12,8 @@ import { useToast } from '@/hooks/use-toast'
 import { copyToClipboard } from '@/lib/clipboard'
 import { Progress } from '@/components/ui/progress'
 import { Label } from '@/components/ui/label'
+import { WalletKeyVault } from '@/components/WalletKeyVault'
+import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { 
   AlertCircle, 
   CheckCircle2, 
@@ -33,7 +35,8 @@ import {
   TrendingUp,
   TrendingDown,
   ChevronDown,
-  Settings2
+  Settings2,
+  Shield
 } from 'lucide-react'
 
 interface MultiWalletKeyGeneratorProps {
@@ -88,6 +91,7 @@ export function MultiWalletKeyGenerator({ network }: MultiWalletKeyGeneratorProp
   const [useManualRateLimit, setUseManualRateLimit] = useState(false)
   const [manualDelaySeconds, setManualDelaySeconds] = useState('5')
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false)
+  const [showVaultDialog, setShowVaultDialog] = useState(false)
   
   const { address: connectedAddress, connector } = useAccount()
   const { signMessageAsync } = useSignMessage()
@@ -643,7 +647,8 @@ export function MultiWalletKeyGenerator({ network }: MultiWalletKeyGeneratorProp
   }
 
   return (
-    <Card className="card-hover shadow-glow animate-slide-up">
+    <>
+      <Card className="card-hover shadow-glow animate-slide-up">
       <CardHeader className="p-6 sm:p-8 pb-4 sm:pb-6">
         <div className="space-y-2">
           <CardTitle className="flex items-center gap-2 text-lg sm:text-xl md:text-2xl font-medium tracking-tight">
@@ -1068,6 +1073,15 @@ export function MultiWalletKeyGenerator({ network }: MultiWalletKeyGeneratorProp
                 <Download className="mr-2 h-4 w-4" />
                 Download All Keys
               </Button>
+              <Button
+                variant="outline"
+                size="default"
+                onClick={() => setShowVaultDialog(true)}
+                className="flex-1"
+              >
+                <Shield className="mr-2 h-4 w-4" />
+                Encrypt Keys
+              </Button>
             </div>
 
             <div className="space-y-4 max-h-[600px] overflow-y-auto">
@@ -1240,5 +1254,23 @@ export function MultiWalletKeyGenerator({ network }: MultiWalletKeyGeneratorProp
         )}
       </CardContent>
     </Card>
+
+    <Dialog 
+      open={showVaultDialog} 
+      onOpenChange={setShowVaultDialog}
+      modal={false}  
+    >
+      <DialogContent 
+        className="max-w-md"
+        onPointerDownOutside={(e) => e.preventDefault()}  
+        onEscapeKeyDown={(e) => e.preventDefault()}  
+      >
+        <WalletKeyVault 
+          keys={generatedKeys}
+          label="Multi-Account Keys"
+        />
+      </DialogContent>
+    </Dialog>
+    </>
   )
 }
