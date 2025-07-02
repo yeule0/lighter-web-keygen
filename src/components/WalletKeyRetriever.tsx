@@ -124,7 +124,10 @@ export function WalletKeyRetriever() {
     if (!decryptedKeys) return
 
     const exportData = {
-      keys: decryptedKeys.keys,
+      keys: decryptedKeys.keys.map(key => ({
+        ...key,
+        apiKeyIndex: key.keyIndex  
+      })),
       exportedAt: new Date().toISOString(),
       version: decryptedKeys.version
     }
@@ -151,7 +154,7 @@ export function WalletKeyRetriever() {
             <CardTitle className="text-xl">Decrypt Key Vault</CardTitle>
           </div>
           <Badge variant="secondary" className="bg-primary/10 text-primary">
-            Industry Standard
+            Secure
           </Badge>
         </div>
         <CardDescription>
@@ -261,7 +264,7 @@ export function WalletKeyRetriever() {
                   <div className="flex items-center gap-2 mb-2">
                     <Key className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm font-medium">
-                      Key #{key.keyIndex} • Account #{key.accountIndex}
+                      API Key #{key.keyIndex} • Account #{key.accountIndex}
                     </span>
                     <Badge variant="outline" className="text-xs">
                       {key.network}

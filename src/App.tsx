@@ -6,12 +6,13 @@ import { AccountCheck } from './components/AccountCheck'
 import { BulkKeyGenerator } from './components/BulkKeyGenerator'
 import { MultiWalletKeyGenerator } from './components/MultiWalletKeyGenerator'
 import { WalletKeyRetriever } from './components/WalletKeyRetriever'
+import { WalletKeyVault } from './components/WalletKeyVault'
 import { ThemeProvider } from './components/theme-provider'
 import { Toaster } from '@/components/ui/toaster'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { copyToClipboard } from '@/lib/clipboard'
-import { Sparkles, Copy, Eye, EyeOff, LogOut, Key, Layers, Wallet, Unlock } from 'lucide-react'
+import { Sparkles, Copy, Eye, EyeOff, LogOut, Key, Layers, Wallet, Unlock, Shield } from 'lucide-react'
 import { ThemeToggle } from './components/theme-toggle'
 import { ConnectKitWrapper } from './components/ConnectKitWrapper'
 import { DomainWarning } from './components/DomainWarning'
@@ -29,6 +30,7 @@ function App() {
     apiKeyIndex: number
     network: 'mainnet' | 'testnet'
   } | null>(null)
+  const [showEncryptOption, setShowEncryptOption] = useState(false)
   
   // Clear state when wallet disconnects
   useEffect(() => {
@@ -36,6 +38,7 @@ function App() {
       setAccountIndex(null)
       setApiKeyData(null)
       setShowPrivateKey(false)
+      setShowEncryptOption(false)
     }
   }, [isConnected])
   
@@ -43,6 +46,7 @@ function App() {
   useEffect(() => {
     setApiKeyData(null)
     setShowPrivateKey(false)
+    setShowEncryptOption(false)
   }, [selectedNetwork, accountIndex])
 
   return (
@@ -123,7 +127,15 @@ function App() {
                 />
                 
                 {accountIndex !== null && (
-                  <Tabs defaultValue="generate" className="w-full">
+                  <Tabs 
+                    defaultValue="generate" 
+                    className="w-full"
+                    onValueChange={() => {
+                      setApiKeyData(null)
+                      setShowPrivateKey(false)
+                      setShowEncryptOption(false)
+                    }}
+                  >
                     <TabsList className="flex w-full gap-8 p-0 bg-transparent border-0 h-auto mb-12 border-b border-border">
                       <TabsTrigger value="generate" className="tab-text text-base data-[state=active]:border-b-2 data-[state=active]:border-foreground pb-4 rounded-none bg-transparent border-b-2 border-transparent transition-all duration-200 data-[state=active]:text-foreground text-secondary">
                         <Key className="h-4 w-4 mr-2" />
@@ -152,6 +164,7 @@ function App() {
                         onApiKeyGenerated={(data) => {
                           setApiKeyData(data)
                           setShowPrivateKey(false)
+                          setShowEncryptOption(false)
                         }}
                       />
                     </TabsContent>
@@ -178,16 +191,17 @@ function App() {
                 
                   {apiKeyData && (
                     <div className="card-hover shadow-glow animate-slide-up rounded-lg p-4 sm:p-6 lg:p-8 mt-6 sm:mt-8">
-                      <div className="space-y-4 sm:space-y-6">
-                        <div>
-                          <span className="mb-2 sm:mb-4 inline-block px-2.5 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-xs font-semibold uppercase tracking-wider rounded-full bg-green-100 dark:bg-green-500/10 text-green-800 dark:text-green-400 border border-green-200 dark:border-green-500/20">SUCCESS</span>
-                          <h3 className="serif-heading text-2xl sm:text-3xl">
-                            API Key Generated
-                          </h3>
-                          <p className="text-sm sm:text-body-small text-secondary mt-1 sm:mt-2">
-                            Your key has been created for {apiKeyData.network}
-                          </p>
-                        </div>
+                      {!showEncryptOption ? (
+                        <div className="space-y-4 sm:space-y-6">
+                          <div>
+                            <span className="mb-2 sm:mb-4 inline-block px-2.5 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-xs font-semibold uppercase tracking-wider rounded-full bg-green-100 dark:bg-green-500/10 text-green-800 dark:text-green-400 border border-green-200 dark:border-green-500/20">SUCCESS</span>
+                            <h3 className="serif-heading text-2xl sm:text-3xl">
+                              API Key Generated
+                            </h3>
+                            <p className="text-sm sm:text-body-small text-secondary mt-1 sm:mt-2">
+                              Your key has been created for {apiKeyData.network}
+                            </p>
+                          </div>
                           
                           <div className="space-y-3 sm:space-y-4">
                             <div className="space-y-1.5 sm:space-y-2">
@@ -293,8 +307,43 @@ function App() {
                           <p className="text-xs sm:text-body-small text-secondary leading-relaxed">
                             Save this configuration securely. The private key cannot be recovered if lost. Keys are generated using cryptographically secure methods and never leave your browser.
                           </p>
+                          <Button
+                            onClick={() => setShowEncryptOption(true)}
+                            variant="outline"
+                            className="w-full mt-4 transition-all hover:border-primary/50"
+                          >
+                            <Shield className="mr-2 h-4 w-4" />
+                            Encrypt with Wallet
+                          </Button>
                         </div>
                       </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <Button
+                          onClick={() => setShowEncryptOption(false)}
+                          variant="ghost"
+                          size="sm"
+                          className="mb-4"
+                        >
+                          ← Back to API Key
+                        </Button>
+                        <WalletKeyVault
+                          keys={[{
+                            privateKey: apiKeyData.privateKey,
+                            publicKey: apiKeyData.publicKey,
+                            keyIndex: apiKeyData.apiKeyIndex,
+                            accountIndex: apiKeyData.accountIndex,
+                            network: apiKeyData.network,
+                            address: address
+                          }]}
+                          label="API Key"
+                          onClear={() => {
+                            setApiKeyData(null)
+                            setShowEncryptOption(false)
+                          }}
+                        />
+                      </div>
+                    )}
                     </div>
                   )}
                 </div>
