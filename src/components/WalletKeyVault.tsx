@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAccount } from 'wagmi'
 import { walletVaultService, type VaultData } from '@/lib/wallet-vault-service'
 import { Button } from '@/components/ui/button'
@@ -18,7 +18,8 @@ import {
   Lock,
   Download,
   Info,
-  AlertTriangle
+  AlertTriangle,
+  Monitor
 } from 'lucide-react'
 
 interface SavedKey {
@@ -43,6 +44,13 @@ export function WalletKeyVault({ keys, label = 'Generated Keys', onClear }: Wall
   const [shareLink, setShareLink] = useState('')
   const [error, setError] = useState('')
   const [showWarning, setShowWarning] = useState(true)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    // Detect mobile browser
+    const checkMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+    setIsMobile(checkMobile)
+  }, [])
 
 
   const saveToWallet = async () => {
@@ -225,7 +233,53 @@ export function WalletKeyVault({ keys, label = 'Generated Keys', onClear }: Wall
               </AlertDescription>
             </Alert>
 
-            {!shareLink ? (
+            {isMobile ? (
+              <div className="space-y-4">
+                <Alert className="border-yellow-500/50 bg-yellow-500/10">
+                  <Monitor className="h-4 w-4 text-yellow-500" />
+                  <AlertDescription className="space-y-3">
+                    <p className="font-semibold text-base">Desktop Feature</p>
+                    <p className="text-sm leading-relaxed">
+                      Secure wallet encryption is currently available on desktop browsers with MetaMask or Rabby extension.
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Please visit this page on your computer to encrypt your keys.
+                    </p>
+                  </AlertDescription>
+                </Alert>
+
+                <div className="rounded-lg bg-muted/30 p-4 space-y-3">
+                  <p className="text-sm font-medium">Alternative Options:</p>
+                  <Button
+                    onClick={() => {
+                      const keysData = JSON.stringify({ keys, timestamp: Date.now() }, null, 2)
+                      const blob = new Blob([keysData], { type: 'application/json' })
+                      const url = URL.createObjectURL(blob)
+                      const a = document.createElement('a')
+                      a.href = url
+                      a.download = `lighter-keys-${Date.now()}.json`
+                      document.body.appendChild(a)
+                      a.click()
+                      document.body.removeChild(a)
+                      URL.revokeObjectURL(url)
+                      toast({
+                        title: "Keys Downloaded",
+                        description: "Store this file securely and delete after importing to your secure storage.",
+                      })
+                    }}
+                    variant="secondary"
+                    className="w-full"
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    Download Unencrypted Keys
+                  </Button>
+                  <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+                    <AlertTriangle className="h-3 w-3" />
+                    <span>Store securely and delete after use</span>
+                  </div>
+                </div>
+              </div>
+            ) : !shareLink ? (
               <div className="space-y-4">
                 <Button
                   onClick={saveToWallet}

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAccount } from 'wagmi'
 import { walletVaultService, type VaultData } from '@/lib/wallet-vault-service'
 import { Button } from '@/components/ui/button'
@@ -20,7 +20,8 @@ import {
   Download,
   Eye,
   EyeOff,
-  Unlock
+  Unlock,
+  Monitor
 } from 'lucide-react'
 
 export function WalletKeyRetriever() {
@@ -31,6 +32,13 @@ export function WalletKeyRetriever() {
   const [error, setError] = useState('')
   const [decryptedKeys, setDecryptedKeys] = useState<VaultData | null>(null)
   const [showPrivateKeys, setShowPrivateKeys] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    // Detect mobile browser
+    const checkMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+    setIsMobile(checkMobile)
+  }, [])
 
   const provider = (window as any).ethereum
 
@@ -164,13 +172,28 @@ export function WalletKeyRetriever() {
       <CardContent className="space-y-4">
         {!decryptedKeys ? (
           <>
-            <Alert className="border-primary/20">
-              <Shield className="h-4 w-4" />
-              <AlertDescription className="space-y-2">
-                <p>Decryption requires wallet confirmation for security.</p>
-                <p className="text-sm opacity-80">After clicking decrypt, check your wallet extension for the approval popup!</p>
-              </AlertDescription>
-            </Alert>
+            {isMobile ? (
+              <Alert className="border-yellow-500/50 bg-yellow-500/10">
+                <Monitor className="h-4 w-4 text-yellow-500" />
+                <AlertDescription className="space-y-3">
+                  <p className="font-semibold text-base">Desktop Feature</p>
+                  <p className="text-sm leading-relaxed">
+                    Secure wallet decryption is currently available on desktop browsers with MetaMask or Rabby extension.
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Please visit this page on your computer to decrypt your vault.
+                  </p>
+                </AlertDescription>
+              </Alert>
+            ) : (
+              <Alert className="border-primary/20">
+                <Shield className="h-4 w-4" />
+                <AlertDescription className="space-y-2">
+                  <p>Decryption requires wallet confirmation for security.</p>
+                  <p className="text-sm opacity-80">After clicking decrypt, check your wallet extension for the approval popup!</p>
+                </AlertDescription>
+              </Alert>
+            )}
 
             <div className="space-y-4">
               <div className="space-y-2">
@@ -202,7 +225,7 @@ export function WalletKeyRetriever() {
 
               <Button
                 onClick={decryptVault}
-                disabled={loading || !vaultLink || !isConnected || !provider}
+                disabled={loading || !vaultLink || !isConnected || !provider || isMobile}
                 className="w-full"
                 size="lg"
               >
@@ -214,7 +237,7 @@ export function WalletKeyRetriever() {
                 ) : (
                   <>
                     <Lock className="mr-2 h-4 w-4" />
-                    {isConnected ? 'Decrypt with Wallet' : 'Connect Wallet First'}
+                    {isMobile ? 'Not Available on Mobile' : isConnected ? 'Decrypt with Wallet' : 'Connect Wallet First'}
                   </>
                 )}
               </Button>
