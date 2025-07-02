@@ -136,22 +136,25 @@ function App() {
                       setShowEncryptOption(false)
                     }}
                   >
-                    <TabsList className="flex w-full gap-8 p-0 bg-transparent border-0 h-auto mb-12 border-b border-border">
-                      <TabsTrigger value="generate" className="tab-text text-base data-[state=active]:border-b-2 data-[state=active]:border-foreground pb-4 rounded-none bg-transparent border-b-2 border-transparent transition-all duration-200 data-[state=active]:text-foreground text-secondary">
-                        <Key className="h-4 w-4 mr-2" />
-                        Generate
+                    <TabsList className="flex w-full gap-2 sm:gap-8 p-0 bg-transparent border-0 h-auto mb-6 sm:mb-12 border-b border-border overflow-x-auto scrollbar-hide">
+                      <TabsTrigger value="generate" className="tab-text text-sm sm:text-base data-[state=active]:border-b-2 data-[state=active]:border-foreground pb-3 sm:pb-4 rounded-none bg-transparent border-b-2 border-transparent transition-all duration-200 data-[state=active]:text-foreground text-secondary whitespace-nowrap flex-shrink-0">
+                        <Key className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
+                        <span className="hidden sm:inline">Generate</span>
+                        <span className="sm:hidden">Gen</span>
                       </TabsTrigger>
-                      <TabsTrigger value="bulk" className="tab-text text-base data-[state=active]:border-b-2 data-[state=active]:border-foreground pb-4 rounded-none bg-transparent border-b-2 border-transparent transition-all duration-200 data-[state=active]:text-foreground text-secondary">
-                        <Layers className="h-4 w-4 mr-2" />
+                      <TabsTrigger value="bulk" className="tab-text text-sm sm:text-base data-[state=active]:border-b-2 data-[state=active]:border-foreground pb-3 sm:pb-4 rounded-none bg-transparent border-b-2 border-transparent transition-all duration-200 data-[state=active]:text-foreground text-secondary whitespace-nowrap flex-shrink-0">
+                        <Layers className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
                         Bulk
                       </TabsTrigger>
-                      <TabsTrigger value="multi" className="tab-text text-base data-[state=active]:border-b-2 data-[state=active]:border-foreground pb-4 rounded-none bg-transparent border-b-2 border-transparent transition-all duration-200 data-[state=active]:text-foreground text-secondary">
-                        <Wallet className="h-4 w-4 mr-2" />
-                        Multi-Account
+                      <TabsTrigger value="multi" className="tab-text text-sm sm:text-base data-[state=active]:border-b-2 data-[state=active]:border-foreground pb-3 sm:pb-4 rounded-none bg-transparent border-b-2 border-transparent transition-all duration-200 data-[state=active]:text-foreground text-secondary whitespace-nowrap flex-shrink-0">
+                        <Wallet className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
+                        <span className="hidden sm:inline">Multi-Account</span>
+                        <span className="sm:hidden">Multi</span>
                       </TabsTrigger>
-                      <TabsTrigger value="vault" className="tab-text text-base data-[state=active]:border-b-2 data-[state=active]:border-foreground pb-4 rounded-none bg-transparent border-b-2 border-transparent transition-all duration-200 data-[state=active]:text-foreground text-secondary">
-                        <Unlock className="h-4 w-4 mr-2" />
-                        Decrypt Vault
+                      <TabsTrigger value="vault" className="tab-text text-sm sm:text-base data-[state=active]:border-b-2 data-[state=active]:border-foreground pb-3 sm:pb-4 rounded-none bg-transparent border-b-2 border-transparent transition-all duration-200 data-[state=active]:text-foreground text-secondary whitespace-nowrap flex-shrink-0">
+                        <Unlock className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
+                        <span className="hidden sm:inline">Decrypt Vault</span>
+                        <span className="sm:hidden">Decrypt</span>
                       </TabsTrigger>
                     </TabsList>
                     
