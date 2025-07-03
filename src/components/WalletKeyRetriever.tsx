@@ -24,21 +24,32 @@ import {
   Monitor
 } from 'lucide-react'
 
-export function WalletKeyRetriever() {
+interface WalletKeyRetrieverProps {
+  initialVaultLink?: string | null
+}
+
+export function WalletKeyRetriever({ initialVaultLink }: WalletKeyRetrieverProps) {
   const { address, isConnected } = useAccount()
   const { toast } = useToast()
-  const [vaultLink, setVaultLink] = useState('')
+  const [vaultLink, setVaultLink] = useState(initialVaultLink || '')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [decryptedKeys, setDecryptedKeys] = useState<VaultData | null>(null)
   const [showPrivateKeys, setShowPrivateKeys] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const [showConnectPrompt, setShowConnectPrompt] = useState(false)
 
   useEffect(() => {
     // Detect mobile browser
     const checkMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
     setIsMobile(checkMobile)
   }, [])
+
+  useEffect(() => {
+    if (initialVaultLink && !isConnected && !isMobile) {
+      setShowConnectPrompt(true)
+    }
+  }, [initialVaultLink, isConnected, isMobile])
 
   const provider = (window as any).ethereum
 
@@ -172,7 +183,20 @@ export function WalletKeyRetriever() {
       <CardContent className="space-y-4">
         {!decryptedKeys ? (
           <>
-            {isMobile ? (
+            {showConnectPrompt && !isConnected ? (
+              <Alert className="border-primary/50 bg-primary/5">
+                <Lock className="h-4 w-4 text-primary" />
+                <AlertDescription className="space-y-3">
+                  <p className="font-semibold text-base">Connect Wallet to Decrypt</p>
+                  <p className="text-sm leading-relaxed">
+                    You've received an encrypted vault link. Please connect your wallet to decrypt the keys.
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Only the wallet that created this vault can decrypt it.
+                  </p>
+                </AlertDescription>
+              </Alert>
+            ) : isMobile ? (
               <Alert className="border-yellow-500/50 bg-yellow-500/10">
                 <Monitor className="h-4 w-4 text-yellow-500" />
                 <AlertDescription className="space-y-3">

@@ -12,7 +12,7 @@ import { Toaster } from '@/components/ui/toaster'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { copyToClipboard } from '@/lib/clipboard'
-import { Sparkles, Copy, Eye, EyeOff, LogOut, Key, Layers, Wallet, Unlock, Shield } from 'lucide-react'
+import { Sparkles, Copy, Eye, EyeOff, LogOut, Key, Layers, Wallet, Unlock, Shield, Lock } from 'lucide-react'
 import { ThemeToggle } from './components/theme-toggle'
 import { ConnectKitWrapper } from './components/ConnectKitWrapper'
 import { DomainWarning } from './components/DomainWarning'
@@ -31,6 +31,20 @@ function App() {
     network: 'mainnet' | 'testnet'
   } | null>(null)
   const [showEncryptOption, setShowEncryptOption] = useState(false)
+  const [activeTab, setActiveTab] = useState('generate')
+  const [vaultLinkFromUrl, setVaultLinkFromUrl] = useState<string | null>(null)
+  
+  // Parse URL hash for vault links on mount
+  useEffect(() => {
+    const hash = window.location.hash
+    if (hash.startsWith('#vault:')) {
+      const vaultLink = window.location.href
+      setVaultLinkFromUrl(vaultLink)
+      setActiveTab('vault')
+      // Clean up the URL 
+      window.history.replaceState(null, '', window.location.pathname)
+    }
+  }, [])
   
   // Clear state when wallet disconnects
   useEffect(() => {
@@ -39,8 +53,10 @@ function App() {
       setApiKeyData(null)
       setShowPrivateKey(false)
       setShowEncryptOption(false)
+    } else if (vaultLinkFromUrl) {
+      setActiveTab('vault')
     }
-  }, [isConnected])
+  }, [isConnected, vaultLinkFromUrl])
   
   // Clear API key data when network or account changes
   useEffect(() => {
@@ -99,23 +115,45 @@ function App() {
 
               {!isConnected && (
                 <div className="mb-12">
-                  <ConnectKitButton />
-                  <div className="mt-8 max-w-2xl">
-                    <p className="text-sm sm:text-body-small text-secondary leading-relaxed hidden sm:block">
-                      API key generation for Lighter DEX involves cryptographic operations and requires careful handling. Private keys generated are non-recoverable if lost. This tool operates entirely in your browser no<br />data is transmitted to external servers.
-                    </p>
-                    <div className="sm:hidden space-y-3 max-w-[70%]">
-                      <p className="text-xs text-secondary leading-relaxed">
-                        API key generation for Lighter DEX involves cryptographic operations and requires<br className="sm:hidden" /> careful handling.
-                      </p>
-                      <p className="text-xs text-secondary leading-relaxed">
-                        Private keys generated are non-recoverable if lost. This tool operates entirely in your browser.
-                      </p>
-                      <p className="text-xs text-secondary leading-relaxed">
-                        No data is transmitted to external servers.
-                      </p>
+                  {vaultLinkFromUrl ? (
+                    <div className="space-y-8">
+                      <div className="rounded-lg bg-primary/5 border border-primary/20 p-6 max-w-2xl mb-8">
+                        <div className="flex items-start gap-3">
+                          <Lock className="h-5 w-5 text-primary mt-0.5" />
+                          <div className="space-y-2">
+                            <h3 className="font-semibold text-base">Connect to Decrypt Vault</h3>
+                            <p className="text-sm text-muted-foreground">
+                              You've received an encrypted vault link. Connect your wallet to decrypt the keys.
+                            </p>
+                            <p className="text-xs text-muted-foreground/80">
+                              Only the wallet that created this vault can decrypt it.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <ConnectKitButton />
                     </div>
-                  </div>
+                  ) : (
+                    <>
+                      <ConnectKitButton />
+                      <div className="mt-8 max-w-2xl">
+                        <p className="text-sm sm:text-body-small text-secondary leading-relaxed hidden sm:block">
+                          API key generation for Lighter DEX involves cryptographic operations and requires careful handling. Private keys generated are non-recoverable if lost. This tool operates entirely in your browser no<br />data is transmitted to external servers.
+                        </p>
+                        <div className="sm:hidden space-y-3 max-w-[70%]">
+                          <p className="text-xs text-secondary leading-relaxed">
+                            API key generation for Lighter DEX involves cryptographic operations and requires<br className="sm:hidden" /> careful handling.
+                          </p>
+                          <p className="text-xs text-secondary leading-relaxed">
+                            Private keys generated are non-recoverable if lost. This tool operates entirely in your browser.
+                          </p>
+                          <p className="text-xs text-secondary leading-relaxed">
+                            No data is transmitted to external servers.
+                          </p>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
               {isConnected && address && (
@@ -128,9 +166,11 @@ function App() {
                 
                 {accountIndex !== null && (
                   <Tabs 
+                    value={activeTab}
                     defaultValue="generate" 
                     className="w-full"
-                    onValueChange={() => {
+                    onValueChange={(value) => {
+                      setActiveTab(value)
                       setApiKeyData(null)
                       setShowPrivateKey(false)
                       setShowEncryptOption(false)
@@ -187,7 +227,7 @@ function App() {
                     </TabsContent>
                     
                     <TabsContent value="vault" className="mt-6 animate-fade-in">
-                      <WalletKeyRetriever />
+                      <WalletKeyRetriever initialVaultLink={vaultLinkFromUrl} />
                     </TabsContent>
                   </Tabs>
                 )}
