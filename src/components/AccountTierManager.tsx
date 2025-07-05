@@ -214,12 +214,25 @@ export function AccountTierManager({ network }: AccountTierManagerProps) {
         if (errorMessage.includes('already has this tier') || 
             errorMessage.includes('account already has this tier') ||
             errorMessage.includes('ineligible for changing tiers')) {
+    
           setCurrentTier(newTier)
           AccountService.saveTierInfo(network, accountInfo.accountIndex, newTier)
+          
+         
+          AccountService.saveLastTierChangeTime(address)
+          
           setMessage({ 
             type: 'info', 
-            text: `Your account is already on the ${newTier} tier` 
+            text: `Your account is already on the ${newTier} tier. Timer has been set for tier changes.` 
           })
+          
+          
+          const timeCheck = AccountService.canSwitchBasedOnTime(address)
+          if (!timeCheck.canSwitch && timeCheck.timeRemaining) {
+            const hours = Math.floor(timeCheck.timeRemaining / (1000 * 60 * 60))
+            const minutes = Math.floor((timeCheck.timeRemaining % (1000 * 60 * 60)) / (1000 * 60))
+            setTimeRemaining(`${hours}h ${minutes}m`)
+          }
         } else {
           setMessage({ type: 'error', text: result.message })
         }
