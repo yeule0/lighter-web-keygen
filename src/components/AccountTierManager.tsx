@@ -397,7 +397,7 @@ export function AccountTierManager({ network }: AccountTierManagerProps) {
         }`}>
           <div className="p-6">
             <h3 className="text-lg font-medium mb-2">Enter Account Details <span className="text-sm font-normal text-muted-foreground">(Optional)</span></h3>
-            <p className="text-sm text-muted-foreground mb-5">Leave empty to use temporary credentials for verification</p>
+            <p className="text-sm text-muted-foreground mb-5">Leave empty to use temporary credentials for verification/switching</p>
           
           {formError && (
             <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
