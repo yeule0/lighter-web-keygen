@@ -26,6 +26,7 @@ interface ApiKeyGeneratorFullProps {
   address: string
   accountIndex: number
   network: 'mainnet' | 'testnet'
+  defaultKeyIndex?: number
   onApiKeyGenerated: (data: {
     privateKey: string
     publicKey: string
@@ -35,14 +36,14 @@ interface ApiKeyGeneratorFullProps {
   }) => void
 }
 
-export function ApiKeyGeneratorFull({ accountIndex, network, onApiKeyGenerated }: ApiKeyGeneratorFullProps) {
+export function ApiKeyGeneratorFull({ accountIndex, network, defaultKeyIndex, onApiKeyGenerated }: ApiKeyGeneratorFullProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [info, setInfo] = useState<string | null>(null)
   const [step, setStep] = useState<'setup' | 'generate' | 'sign' | 'submit' | 'success'>('setup')
   
   
-  const [targetKeyIndex, setTargetKeyIndex] = useState('1')
+  const [targetKeyIndex, setTargetKeyIndex] = useState(defaultKeyIndex?.toString() || '1')
   const [generatedKeys, setGeneratedKeys] = useState<{ privateKey: string; publicKey: string } | null>(null)
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
   

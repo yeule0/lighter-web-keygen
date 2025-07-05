@@ -1,16 +1,23 @@
 import { useState, useEffect } from 'react'
+import { useAccount, useSignMessage, useSwitchChain } from 'wagmi'
+import { mainnet } from 'wagmi/chains'
 import { AccountService, AccountTier, AccountInfo } from '../lib/account-service'
-import { AlertCircle, CheckCircle, Clock, Info, Zap, Shield, Eye, EyeOff } from 'lucide-react'
+import { AlertCircle, CheckCircle, Clock, Info, Zap, Shield, Eye, EyeOff, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AccountTierVault } from './AccountTierVault'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 
 interface AccountTierManagerProps {
   network: 'mainnet' | 'testnet'
 }
 
 export function AccountTierManager({ network }: AccountTierManagerProps) {
+  const { address, chain } = useAccount()
+  const { signMessageAsync } = useSignMessage()
+  const { switchChainAsync } = useSwitchChain()
   const [currentTier, setCurrentTier] = useState<AccountTier>('standard')
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null)
@@ -28,11 +35,15 @@ export function AccountTierManager({ network }: AccountTierManagerProps) {
   
   // Current account info for vault
   const [currentAccountInfo, setCurrentAccountInfo] = useState<AccountInfo | null>(null)
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
+  const [pendingTier, setPendingTier] = useState<AccountTier | null>(null)
+  const [tempAccountIndex, setTempAccountIndex] = useState<number | null>(null)
+  const [isGeneratingTempKey, setIsGeneratingTempKey] = useState(false)
 
   useEffect(() => {
     // Check time restriction on mount and update
     const checkTimeRestriction = () => {
-      const timeCheck = AccountService.canSwitchBasedOnTime()
+      const timeCheck = AccountService.canSwitchBasedOnTime(address)
       if (!timeCheck.canSwitch && timeCheck.timeRemaining) {
         const hours = Math.floor(timeCheck.timeRemaining / (1000 * 60 * 60))
         const minutes = Math.floor((timeCheck.timeRemaining % (1000 * 60 * 60)) / (1000 * 60))
@@ -46,7 +57,7 @@ export function AccountTierManager({ network }: AccountTierManagerProps) {
     const interval = setInterval(checkTimeRestriction, 60000) // Update every minute
     
     return () => clearInterval(interval)
-  }, [])
+  }, [address])
 
   // Handle vault restore
   const handleVaultRestore = (info: AccountInfo) => {
@@ -129,48 +140,163 @@ export function AccountTierManager({ network }: AccountTierManagerProps) {
     return true
   }
 
+  const handleGenerateTempKeyAndSwitch = async () => {
+    if (!tempAccountIndex || !pendingTier || !address) return
+    
+    setIsGeneratingTempKey(true)
+    setShowConfirmDialog(false)
+    setMessage(null)
+    
+    try {
+      
+      if (chain && chain.id !== mainnet.id) {
+        setMessage({ type: 'info', text: 'Switching to Ethereum mainnet for signature...' })
+        try {
+          await switchChainAsync({ chainId: mainnet.id })
+        } catch (switchError: any) {
+          throw new Error('Please switch to Ethereum mainnet to sign the transaction')
+        }
+      }
+      
+      setMessage({ type: 'info', text: 'Generating temporary API key...' })
+      
+      
+      const tempCredentials = await AccountService.generateAndRegisterTempKey(
+        network,
+        tempAccountIndex,
+        0, 
+        signMessageAsync
+      )
+      
+      setMessage({ type: 'info', text: 'Switching account tier...' })
+      
+      
+      const result = await AccountService.switchTier(tempCredentials, pendingTier, address)
+      
+      if (result.success) {
+        setCurrentTier(pendingTier)
+        const isVerifyingTemp = currentTier === pendingTier
+        setMessage({ 
+          type: 'success', 
+          text: isVerifyingTemp 
+            ? `Successfully verified ${pendingTier} tier (Using temporary API key)`
+            : `${result.message} (Using temporary API key)`
+        })
+        AccountService.saveTierInfo(network, tempCredentials.accountIndex, pendingTier)
+      } else {
+        const errorMessage = result.message.toLowerCase()
+        if (errorMessage.includes('already has this tier') || 
+            errorMessage.includes('account already has this tier') ||
+            errorMessage.includes('ineligible for changing tiers')) {
+          setCurrentTier(pendingTier)
+          AccountService.saveTierInfo(network, tempCredentials.accountIndex, pendingTier)
+          setMessage({ 
+            type: 'info', 
+            text: `Your account is already on the ${pendingTier} tier.` 
+          })
+        } else {
+          setMessage({ type: 'error', text: result.message })
+        }
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to generate temporary credentials'
+      
+      if (errorMessage.includes('User rejected') || errorMessage.includes('User denied') || errorMessage.includes('cancelled by user')) {
+        setMessage({ 
+          type: 'error', 
+          text: 'Transaction cancelled' 
+        })
+      } else {
+        setMessage({ 
+          type: 'error', 
+          text: errorMessage
+        })
+      }
+    } finally {
+      setIsGeneratingTempKey(false)
+      setPendingTier(null)
+      setTempAccountIndex(null)
+    }
+  }
+
   const handleTierSwitch = async (newTier: AccountTier) => {
-    if (!validateForm()) {
+    
+    const hasFormData = privateKey || accountIndex || apiKeyIndex
+    
+    if (hasFormData && !validateForm()) {
       return
     }
 
+    // If verifying current tier (not switching), skip time restriction
+    const isVerifying = currentTier === newTier
 
-    // Check time restriction
-    const timeCheck = AccountService.canSwitchBasedOnTime()
-    if (!timeCheck.canSwitch) {
-      setMessage({ 
-        type: 'error', 
-        text: 'You must wait at least 3 hours between tier changes.' 
-      })
-      return
+    // Check time restriction only for actual tier changes
+    if (!isVerifying) {
+      const timeCheck = AccountService.canSwitchBasedOnTime(address)
+      if (!timeCheck.canSwitch) {
+        setMessage({ 
+          type: 'error', 
+          text: 'You must wait at least 3 hours between tier changes.' 
+        })
+        return
+      }
     }
 
     setIsLoading(true)
     setMessage(null)
 
     try {
-      const accountInfo: AccountInfo = {
-        accountIndex: parseInt(accountIndex, 10),
-        apiKeyIndex: parseInt(apiKeyIndex, 10),
-        privateKey: privateKey.startsWith('0x') ? privateKey : `0x${privateKey}`,
-        network
+      let accountInfo: AccountInfo
+      
+      if (hasFormData) {
+        
+        accountInfo = {
+          accountIndex: parseInt(accountIndex, 10),
+          apiKeyIndex: parseInt(apiKeyIndex, 10),
+          privateKey: privateKey.startsWith('0x') ? privateKey : `0x${privateKey}`,
+          network
+        }
+      } else {
+        
+        if (!address) {
+          throw new Error('Please connect your wallet first')
+        }
+        
+        try {
+          
+          const accountIdx = await AccountService.getAccountIndex(address, network)
+          setTempAccountIndex(accountIdx)
+          setPendingTier(newTier)
+          setShowConfirmDialog(true)
+          setIsLoading(false)
+          return 
+        } catch (error) {
+          throw error
+        }
       }
       
-      const result = await AccountService.switchTier(accountInfo, newTier)
+      const result = await AccountService.switchTier(accountInfo, newTier, address)
       
       if (result.success) {
         setCurrentTier(newTier)
-        setMessage({ type: 'success', text: result.message })
+        const successMessage = isVerifying
+          ? `Successfully verified ${newTier} tier`
+          : hasFormData 
+            ? result.message 
+            : `${result.message} (Using temporary credentials)`
+        setMessage({ type: 'success', text: successMessage })
         // Save new tier to localStorage with timestamp
         AccountService.saveTierInfo(network, accountInfo.accountIndex, newTier)
-        // Clear form on success
-        setPrivateKey('')
-        setAccountIndex('')
-        setApiKeyIndex('')
-        setShowPrivateKey(false)
-        setCurrentAccountInfo(null)
+        
+        if (hasFormData) {
+          setPrivateKey('')
+          setAccountIndex('')
+          setApiKeyIndex('')
+          setShowPrivateKey(false)
+          setCurrentAccountInfo(null)
+        }
         // Update time restriction
-        const timeCheck = AccountService.canSwitchBasedOnTime()
+        const timeCheck = AccountService.canSwitchBasedOnTime(address)
         if (!timeCheck.canSwitch && timeCheck.timeRemaining) {
           const hours = Math.floor(timeCheck.timeRemaining / (1000 * 60 * 60))
           const minutes = Math.floor((timeCheck.timeRemaining % (1000 * 60 * 60)) / (1000 * 60))
@@ -270,8 +396,8 @@ export function AccountTierManager({ network }: AccountTierManagerProps) {
             : 'bg-background'
         }`}>
           <div className="p-6">
-            <h3 className="text-lg font-medium mb-2">Enter Account Details</h3>
-            <p className="text-sm text-muted-foreground mb-5">Configure your Lighter API credentials</p>
+            <h3 className="text-lg font-medium mb-2">Enter Account Details <span className="text-sm font-normal text-muted-foreground">(Optional)</span></h3>
+            <p className="text-sm text-muted-foreground mb-5">Leave empty to use temporary credentials for verification</p>
           
           {formError && (
             <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
@@ -281,7 +407,7 @@ export function AccountTierManager({ network }: AccountTierManagerProps) {
           
           <div className="space-y-4">
             <div>
-              <Label htmlFor="privateKey" className="text-sm">API Private Key</Label>
+              <Label htmlFor="privateKey" className="text-sm">API Private Key <span className="text-xs text-muted-foreground">(Optional)</span></Label>
               <div className="relative mt-1.5">
                 <Input
                   id="privateKey"
@@ -337,7 +463,7 @@ export function AccountTierManager({ network }: AccountTierManagerProps) {
             </div>
             
             <div className="pt-2">
-              <span className="text-xs text-muted-foreground">Network: {network}</span>
+              <span className="text-xs text-muted-foreground block">Network: {network}</span>
             </div>
           </div>
           </div>
@@ -360,8 +486,8 @@ export function AccountTierManager({ network }: AccountTierManagerProps) {
                   <p className="text-sm text-muted-foreground mt-1">Perfect for retail traders</p>
                 </div>
                 {currentTier === 'standard' && (
-                  <div className="px-3 py-1 bg-primary/10 rounded-full">
-                    <span className="text-xs font-medium text-primary">Active</span>
+                  <div className="px-3 py-1 bg-green-500/20 dark:bg-green-500/10 rounded-full">
+                    <span className="text-xs font-medium text-green-700 dark:text-green-400">Active</span>
                   </div>
                 )}
               </div>
@@ -396,7 +522,7 @@ export function AccountTierManager({ network }: AccountTierManagerProps) {
             
             <Button
               onClick={() => handleTierSwitch('standard')}
-              disabled={isLoading || !!timeRemaining || isMainnetOnly}
+              disabled={isLoading || isMainnetOnly}
               variant={currentTier === 'standard' ? 'outline' : 'secondary'}
               className="w-full"
             >
@@ -412,7 +538,7 @@ export function AccountTierManager({ network }: AccountTierManagerProps) {
               : 'border-border bg-card'
           }`}>
             {/* Subtle gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-purple-500/5 pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-purple-500/10 dark:to-purple-500/5 pointer-events-none" />
             <div className="relative z-10">
             <div className="mb-6">
               <div className="flex items-center justify-between mb-3">
@@ -421,8 +547,8 @@ export function AccountTierManager({ network }: AccountTierManagerProps) {
                   <p className="text-sm text-muted-foreground mt-1">Optimized for HFT</p>
                 </div>
                 {currentTier === 'premium' && (
-                  <div className="px-3 py-1 bg-primary/10 rounded-full">
-                    <span className="text-xs font-medium text-primary">Active</span>
+                  <div className="px-3 py-1 bg-green-500/20 dark:bg-green-500/10 rounded-full">
+                    <span className="text-xs font-medium text-green-700 dark:text-green-400">Active</span>
                   </div>
                 )}
               </div>
@@ -457,7 +583,7 @@ export function AccountTierManager({ network }: AccountTierManagerProps) {
             
             <Button
               onClick={() => handleTierSwitch('premium')}
-              disabled={isLoading || !!timeRemaining || isMainnetOnly}
+              disabled={isLoading || isMainnetOnly}
               variant={currentTier === 'premium' ? 'outline' : 'default'}
               className="w-full"
             >
@@ -484,6 +610,51 @@ export function AccountTierManager({ network }: AccountTierManagerProps) {
             </li>
           </ul>
         </div>
+        
+        {/* Confirmation Dialog for Temporary Key Generation */}
+        <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Create Temporary API Key</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Since no API key was provided, a temporary API key will be generated to verify your tier status.
+              </p>
+              <Alert>
+                <Info className="h-4 w-4" />
+                <AlertDescription>
+                  A temporary key will be created and used only for this tier switch operation. It won't be stored anywhere.
+                </AlertDescription>
+              </Alert>
+            </div>
+            <DialogFooter className="mt-6">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowConfirmDialog(false)
+                  setPendingTier(null)
+                  setTempAccountIndex(null)
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleGenerateTempKeyAndSwitch}
+                disabled={isGeneratingTempKey}
+              >
+                {isGeneratingTempKey ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  'Continue'
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   )

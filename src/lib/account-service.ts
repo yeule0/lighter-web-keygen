@@ -21,8 +21,45 @@ export interface TierSwitchRequirements {
 
 export class AccountService {
   private static DEFAULT_AUTH_EXPIRY = 10 * 60 * 1000 // 10 minutes in milliseconds
-  
-  // Get current tier from localStorage
+  static async getAccountIndex(walletAddress: string, network: 'mainnet' | 'testnet'): Promise<number> {
+    const baseUrl = network === 'mainnet' 
+      ? 'https://mainnet.zklighter.elliot.ai'
+      : 'https://testnet.zklighter.elliot.ai'
+    
+    const response = await fetch(
+      `${baseUrl}/api/v1/accountsByL1Address?l1_address=${walletAddress}`,
+      {
+        headers: {
+          'Accept': 'application/json',
+        }
+      }
+    )
+    
+    if (!response.ok) {
+      const errorText = await response.text()
+      let errorData
+      try {
+        errorData = JSON.parse(errorText)
+      } catch {
+        throw new Error('Failed to fetch account')
+      }
+      
+      if (errorData.message === 'account not found') {
+        throw new Error(`No ${network} account found. Please create an account on Lighter ${network} first.`)
+      }
+      throw new Error(errorData.message || 'Failed to fetch account')
+    }
+    
+    const data = await response.json()
+    const subAccounts = data.sub_accounts || []
+    
+    if (subAccounts.length === 0) {
+      throw new Error(`No ${network} account found. Please create an account on Lighter ${network} first.`)
+    }
+    
+    // Return the first account index found
+    return subAccounts[0].index
+  }
   static getCurrentTier(network: 'mainnet' | 'testnet', accountIndex: number): AccountTier {
     const key = `lighter_tier_${network}_${accountIndex}`
     const stored = localStorage.getItem(key)
@@ -54,7 +91,8 @@ export class AccountService {
   
   static async switchTier(
     accountInfo: AccountInfo,
-    newTier: AccountTier
+    newTier: AccountTier,
+    walletAddress?: string
   ): Promise<{ success: boolean; message: string; data?: any }> {
     try {
       // Initialize crypto
@@ -137,7 +175,7 @@ export class AccountService {
       }
       
       // Save only the tier change time on success
-      AccountService.saveLastTierChangeTime()
+      AccountService.saveLastTierChangeTime(walletAddress)
       
       return {
         success: true,
@@ -193,13 +231,17 @@ export class AccountService {
     }
   }
   
-  // Store only the last tier change time 
-  static saveLastTierChangeTime(): void {
-    localStorage.setItem('lighter_last_tier_change', Date.now().toString())
+  // Store only the last tier change time per wallet address
+  static saveLastTierChangeTime(walletAddress?: string): void {
+    if (!walletAddress) return
+    const key = `lighter_last_tier_change_${walletAddress.toLowerCase()}`
+    localStorage.setItem(key, Date.now().toString())
   }
   
-  static getLastTierChangeTime(): number | null {
-    const stored = localStorage.getItem('lighter_last_tier_change')
+  static getLastTierChangeTime(walletAddress?: string): number | null {
+    if (!walletAddress) return null
+    const key = `lighter_last_tier_change_${walletAddress.toLowerCase()}`
+    const stored = localStorage.getItem(key)
     if (!stored) return null
     
     try {
@@ -209,8 +251,8 @@ export class AccountService {
     }
   }
   
-  static canSwitchBasedOnTime(): { canSwitch: boolean; timeRemaining?: number } {
-    const lastChange = this.getLastTierChangeTime()
+  static canSwitchBasedOnTime(walletAddress?: string): { canSwitch: boolean; timeRemaining?: number } {
+    const lastChange = this.getLastTierChangeTime(walletAddress)
     if (!lastChange) return { canSwitch: true }
     
     const threeHours = 3 * 60 * 60 * 1000 
@@ -223,6 +265,111 @@ export class AccountService {
     return {
       canSwitch: false,
       timeRemaining: threeHours - timeSinceLastChange
+    }
+  }
+  
+  static async generateAndRegisterTempKey(
+    network: 'mainnet' | 'testnet',
+    accountIndex: number,
+    apiKeyIndex: number = 0,
+    signMessageAsync: (args: { message: string }) => Promise<string>
+  ): Promise<AccountInfo> {
+    try {
+      const networkConfig = {
+        mainnet: {
+          url: 'https://mainnet.zklighter.elliot.ai',
+          chainId: 304
+        },
+        testnet: {
+          url: 'https://testnet.zklighter.elliot.ai',
+          chainId: 300
+        }
+      }
+      
+      
+      const crypto = await LighterFullCrypto.initialize()
+      
+     
+      const defaultKey = await crypto.getDefaultKey()
+      await crypto.setCurrentKey(defaultKey.privateKey)
+      
+      
+      const keyPair = await crypto.generateApiKey()
+      
+      
+      const nonceUrl = `${networkConfig[network].url}/api/v1/nextNonce?account_index=${accountIndex}&api_key_index=${apiKeyIndex}`
+      const nonceResponse = await fetch(nonceUrl)
+      
+      if (!nonceResponse.ok) {
+        throw new Error(`Failed to fetch nonce: ${nonceResponse.status}`)
+      }
+      
+      const nonceData = await nonceResponse.json()
+      const nonce = nonceData.nonce
+      
+     
+      const MAX_TIMESTAMP = 281474976710655
+      const TEN_MINUTES = 10 * 60 * 1000
+      const expiredAt = Math.min(Date.now() + TEN_MINUTES, MAX_TIMESTAMP)
+      
+      
+      const result = await crypto.signChangePubKey({
+        newPubkey: keyPair.publicKey,
+        newPrivkey: keyPair.privateKey,
+        accountIndex: accountIndex,
+        apiKeyIndex: apiKeyIndex,
+        nonce: nonce,
+        expiredAt: expiredAt,
+        chainId: networkConfig[network].chainId
+      })
+      
+     
+      const l1Signature = await signMessageAsync({ message: result.messageToSign })
+      
+      
+      const { MessageToSign, ...transactionWithoutMessage } = result.transaction
+      const txInfo = {
+        ...transactionWithoutMessage,
+        L1Sig: l1Signature
+      }
+      
+      
+      const formData = new FormData()
+      formData.append('tx_type', '8')
+      formData.append('tx_info', JSON.stringify(txInfo))
+      
+      const response = await fetch(
+        `${networkConfig[network].url}/api/v1/sendTx`,
+        {
+          method: 'POST',
+          body: formData
+        }
+      )
+      
+      if (!response.ok) {
+        const responseText = await response.text()
+        let errorMessage = 'Failed to submit transaction'
+        try {
+          const errorData = JSON.parse(responseText)
+          errorMessage = errorData.message || errorData.error || errorMessage
+        } catch {}
+        throw new Error(errorMessage)
+      }
+      
+     
+      await new Promise(resolve => setTimeout(resolve, 10000))
+      
+      
+      await crypto.setCurrentKey(keyPair.privateKey)
+      
+      return {
+        accountIndex,
+        apiKeyIndex,
+        privateKey: keyPair.privateKey,
+        network
+      }
+    } catch (error) {
+      throw new Error(`Failed to generate temporary API key: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 }

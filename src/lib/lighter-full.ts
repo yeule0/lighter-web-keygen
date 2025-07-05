@@ -96,17 +96,22 @@ export class LighterFullCrypto {
     };
   }
 
-  async getDefaultKey(): Promise<{ privateKey: string; publicKey: string }> {
-    // Generate a cryptographically secure random seed (256 bits / 32 bytes)
-    const randomBytes = new Uint8Array(32);
-    crypto.getRandomValues(randomBytes);
+  async getDefaultKey(seed?: string): Promise<{ privateKey: string; publicKey: string }> {
+    let finalSeed: string;
     
-    // Convert to hex string for use as seed
-    const seed = Array.from(randomBytes)
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join('');
+    if (seed) {
+      finalSeed = seed;
+    } else {
+      const randomBytes = new Uint8Array(32);
+      crypto.getRandomValues(randomBytes);
+      
+      
+      finalSeed = Array.from(randomBytes)
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
+    }
     
-    const result = window.lighterWASM.getDefaultKey(seed);
+    const result = window.lighterWASM.getDefaultKey(finalSeed);
     if (result.error) {
       throw new Error(result.error);
     }
