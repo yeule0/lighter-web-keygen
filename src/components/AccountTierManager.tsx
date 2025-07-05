@@ -40,6 +40,26 @@ export function AccountTierManager({ network }: AccountTierManagerProps) {
   const [tempAccountIndex, setTempAccountIndex] = useState<number | null>(null)
   const [isGeneratingTempKey, setIsGeneratingTempKey] = useState(false)
 
+ 
+  useEffect(() => {
+    const loadTierForWallet = async () => {
+      if (!address || isMainnetOnly) return
+      
+      try {
+        
+        const accountIdx = await AccountService.getAccountIndex(address, network)
+        
+        const tier = AccountService.getCurrentTier(network, accountIdx)
+        setCurrentTier(tier)
+      } catch (error) {
+        
+        setCurrentTier('standard')
+      }
+    }
+    
+    loadTierForWallet()
+  }, [address, network, isMainnetOnly])
+
   useEffect(() => {
     // Check time restriction on mount and update
     const checkTimeRestriction = () => {
