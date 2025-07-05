@@ -7,6 +7,7 @@ import { BulkKeyGenerator } from './components/BulkKeyGenerator'
 import { MultiWalletKeyGenerator } from './components/MultiWalletKeyGenerator'
 import { WalletKeyRetriever } from './components/WalletKeyRetriever'
 import { WalletKeyVault } from './components/WalletKeyVault'
+import { AccountTierManager } from './components/AccountTierManager'
 import { ThemeProvider } from './components/theme-provider'
 import { Toaster } from '@/components/ui/toaster'
 import { Button } from '@/components/ui/button'
@@ -196,6 +197,11 @@ function App() {
                         <span className="hidden sm:inline">Decrypt Vault</span>
                         <span className="sm:hidden">Decrypt</span>
                       </TabsTrigger>
+                      <TabsTrigger value="tier" className="tab-text text-sm sm:text-base data-[state=active]:border-b-2 data-[state=active]:border-foreground pb-3 sm:pb-4 rounded-none bg-transparent border-b-2 border-transparent transition-all duration-200 data-[state=active]:text-foreground text-secondary whitespace-nowrap flex-shrink-0">
+                        <Shield className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
+                        <span className="hidden sm:inline">Account Tier</span>
+                        <span className="sm:hidden">Tier</span>
+                      </TabsTrigger>
                     </TabsList>
                     
                     <TabsContent value="generate" className="mt-6 animate-fade-in">
@@ -228,6 +234,10 @@ function App() {
                     
                     <TabsContent value="vault" className="mt-6 animate-fade-in">
                       <WalletKeyRetriever initialVaultLink={vaultLinkFromUrl} />
+                    </TabsContent>
+                    
+                    <TabsContent value="tier" className="mt-6 animate-fade-in">
+                      <AccountTierManager network={selectedNetwork} />
                     </TabsContent>
                   </Tabs>
                 )}

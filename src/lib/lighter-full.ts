@@ -6,6 +6,7 @@ declare global {
       setCurrentKey: (privateKey: string) => { success: boolean; publicKey?: string; error?: string };
       signChangePubKey: (params: any) => { transaction: any; messageToSign: string; error?: string };
       getDefaultKey: (seed: string) => { privateKey: string; publicKey: string; error?: string };
+      createAuthToken: (params: { deadline: number; accountIndex: number; apiKeyIndex: number }) => { authToken: string; error?: string };
     };
   }
 }
@@ -114,5 +115,18 @@ export class LighterFullCrypto {
       privateKey: '0x' + result.privateKey,
       publicKey: '0x' + result.publicKey
     };
+  }
+
+  async createAuthToken(params: { 
+    deadline: number; 
+    accountIndex: number; 
+    apiKeyIndex: number;
+  }): Promise<string> {
+    const result = window.lighterWASM.createAuthToken(params);
+    if (result.error) {
+      throw new Error(result.error);
+    }
+    
+    return result.authToken;
   }
 }

@@ -69,7 +69,7 @@ export function AccountCheck({ address, onAccountFound, onNetworkChange }: Accou
         
         if (errorData.message === 'account not found') {
           setAccounts([])
-          setError('No account found. You need to create an account on Lighter first.')
+          setError(`No ${selectedNetwork} account found. You need to create an account on Lighter ${selectedNetwork} first.`)
         } else {
           throw new Error(errorData.message || 'Failed to fetch account')
         }
