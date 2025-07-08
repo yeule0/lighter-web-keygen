@@ -36,15 +36,23 @@ interface ApiKeyGeneratorFullProps {
   }) => void
 }
 
+interface WorkflowState {
+  step: 'setup' | 'generate' | 'sign' | 'submit' | 'success'
+  generatedKeys: { privateKey: string; publicKey: string } | null
+  info: string | null
+}
+
 export function ApiKeyGeneratorFull({ accountIndex, network, defaultKeyIndex, onApiKeyGenerated }: ApiKeyGeneratorFullProps) {
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [info, setInfo] = useState<string | null>(null)
-  const [step, setStep] = useState<'setup' | 'generate' | 'sign' | 'submit' | 'success'>('setup')
-  
+  const [workflowState, setWorkflowState] = useState<WorkflowState>({
+    step: 'setup',
+    generatedKeys: null,
+    info: null
+  })
   
   const [targetKeyIndex, setTargetKeyIndex] = useState(defaultKeyIndex?.toString() || '1')
-  const [generatedKeys, setGeneratedKeys] = useState<{ privateKey: string; publicKey: string } | null>(null)
+  
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
   
   const { signMessageAsync } = useSignMessage()
@@ -54,12 +62,14 @@ export function ApiKeyGeneratorFull({ accountIndex, network, defaultKeyIndex, on
   
   // Reset component state when network or account changes
   useEffect(() => {
-    setStep('setup')
+    setWorkflowState({
+      step: 'setup',
+      generatedKeys: null,
+      info: null
+    })
     setError(null)
-    setInfo(null)
-    setGeneratedKeys(null)
-    setTargetKeyIndex('1')
-  }, [network, accountIndex])
+    setTargetKeyIndex(defaultKeyIndex?.toString() || '1')
+  }, [network, accountIndex, defaultKeyIndex])
   
   const networkConfig = {
     mainnet: {
@@ -79,11 +89,14 @@ export function ApiKeyGeneratorFull({ accountIndex, network, defaultKeyIndex, on
     try {
       const crypto = await LighterFullCrypto.initialize()
       
-      setInfo('Generating a secure random bootstrap key for initial setup...')
+      setWorkflowState(prev => ({ 
+        ...prev, 
+        info: 'Generating a secure random bootstrap key for initial setup...' 
+      }))
       const defaultKey = await crypto.getDefaultKey()
       await crypto.setCurrentKey(defaultKey.privateKey)
       
-      setStep('generate')
+      setWorkflowState(prev => ({ ...prev, step: 'generate', info: null }))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Setup failed')
     } finally {
@@ -94,15 +107,17 @@ export function ApiKeyGeneratorFull({ accountIndex, network, defaultKeyIndex, on
   const handleGenerateApiKey = async () => {
     setLoading(true)
     setError(null)
-    setInfo(null)
+    setWorkflowState(prev => ({ ...prev, info: null }))
     
     try {
       const crypto = await LighterFullCrypto.initialize()
       
       const keyPair = await crypto.generateApiKey()
-      setGeneratedKeys(keyPair)
-      
-      setStep('sign')
+      setWorkflowState(prev => ({ 
+        ...prev, 
+        generatedKeys: keyPair,
+        step: 'sign' 
+      }))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate API key')
     } finally {
@@ -111,23 +126,23 @@ export function ApiKeyGeneratorFull({ accountIndex, network, defaultKeyIndex, on
   }
 
   const handleSignAndSubmit = async () => {
-    if (!generatedKeys) return
+    if (!workflowState.generatedKeys) return
     
     setShowConfirmDialog(true)
   }
   
   const handleConfirmedSign = async () => {
-    if (!generatedKeys) return
+    if (!workflowState.generatedKeys) return
     
     setShowConfirmDialog(false)
     setLoading(true)
     setError(null)
-    setInfo('Creating transaction with L2 signature...')
+    setWorkflowState(prev => ({ ...prev, info: 'Creating transaction with L2 signature...' }))
     
     try {
       const crypto = await LighterFullCrypto.initialize()
       
-      setInfo('Fetching next nonce...')
+      setWorkflowState(prev => ({ ...prev, info: 'Fetching next nonce...' }))
       const nonceUrl = `${networkConfig[network].url}/api/v1/nextNonce?account_index=${accountIndex}&api_key_index=${targetKeyIndex}`
       const nonceResponse = await fetch(nonceUrl)
       
@@ -143,8 +158,8 @@ export function ApiKeyGeneratorFull({ accountIndex, network, defaultKeyIndex, on
       const expiredAt = Math.min(Date.now() + TEN_MINUTES, MAX_TIMESTAMP)
       
       const result = await crypto.signChangePubKey({
-        newPubkey: generatedKeys.publicKey,
-        newPrivkey: generatedKeys.privateKey,
+        newPubkey: workflowState.generatedKeys.publicKey,
+        newPrivkey: workflowState.generatedKeys.privateKey,
         accountIndex: accountIndex,
         apiKeyIndex: parseInt(targetKeyIndex),
         nonce: nonce,
@@ -152,34 +167,35 @@ export function ApiKeyGeneratorFull({ accountIndex, network, defaultKeyIndex, on
         chainId: networkConfig[network].chainId
       })
       
-      setInfo('Requesting wallet signature for L1 authorization...')
+      setWorkflowState(prev => ({ ...prev, info: 'Requesting wallet signature for L1 authorization...' }))
 
       let l1Signature: string
       try {
         if (chain && chain.id !== mainnet.id) {
-          setInfo('Switching to Ethereum mainnet for L1 signature...')
+          setWorkflowState(prev => ({ ...prev, info: 'Switching to Ethereum mainnet for L1 signature...' }))
           try {
             await switchChainAsync({ chainId: mainnet.id })
-          } catch (switchError: any) {
+          } catch {
             throw new Error('Please switch to Ethereum mainnet to sign the transaction')
           }
         }
         
         l1Signature = await signMessageAsync({ message: result.messageToSign })
-      } catch (error: any) {
-        if (error?.message?.includes('User rejected') || error?.message?.includes('User denied')) {
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+        if (errorMessage.includes('User rejected') || errorMessage.includes('User denied')) {
           throw new Error('Transaction cancelled by user')
         }
-        throw new Error(`Failed to sign message: ${error?.message || 'Unknown error'}`)
+        throw new Error(`Failed to sign message: ${errorMessage}`)
       }
 
-      const { MessageToSign, ...transactionWithoutMessage } = result.transaction
+      const { MessageToSign: _, ...transactionWithoutMessage } = result.transaction
       const txInfo = {
         ...transactionWithoutMessage,
         L1Sig: l1Signature
       }
       
-      setInfo('Submitting transaction to Lighter...')
+      setWorkflowState(prev => ({ ...prev, info: 'Submitting transaction to Lighter...' }))
       
       const formData = new FormData()
       formData.append('tx_type', '8')
@@ -205,21 +221,27 @@ export function ApiKeyGeneratorFull({ accountIndex, network, defaultKeyIndex, on
         throw new Error(errorMessage)
       }
 
-      setStep('submit')
-      setInfo('Transaction submitted! Waiting for confirmation...')
+      setWorkflowState(prev => ({ 
+        ...prev, 
+        step: 'submit',
+        info: 'Transaction submitted! Waiting for confirmation...' 
+      }))
       
       await new Promise(resolve => setTimeout(resolve, 10000))
       
       onApiKeyGenerated({
-        privateKey: generatedKeys.privateKey,
-        publicKey: generatedKeys.publicKey,
+        privateKey: workflowState.generatedKeys.privateKey,
+        publicKey: workflowState.generatedKeys.publicKey,
         accountIndex: accountIndex,
         apiKeyIndex: parseInt(targetKeyIndex),
         network: network
       })
       
-      setStep('success')
-      setInfo('API key successfully registered!')
+      setWorkflowState(prev => ({ 
+        ...prev, 
+        step: 'success',
+        info: 'API key successfully registered!' 
+      }))
       
       toast({
         title: "Success!",
@@ -227,7 +249,7 @@ export function ApiKeyGeneratorFull({ accountIndex, network, defaultKeyIndex, on
       })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to complete transaction')
-      setStep('sign')
+      setWorkflowState(prev => ({ ...prev, step: 'sign' }))
     } finally {
       setLoading(false)
     }
@@ -251,7 +273,7 @@ export function ApiKeyGeneratorFull({ accountIndex, network, defaultKeyIndex, on
       </CardHeader>
       <CardContent className="p-6 sm:p-8 pt-2 sm:pt-4">
         {/* Setup Phase */}
-        {step === 'setup' && (
+        {workflowState.step === 'setup' && (
           <div className="space-y-4">
             <Alert className="border-blue-200 dark:border-blue-900">
               <Shield className="h-4 w-4" />
@@ -296,7 +318,7 @@ export function ApiKeyGeneratorFull({ accountIndex, network, defaultKeyIndex, on
         )}
 
         {/* Generate Phase */}
-        {step === 'generate' && (
+        {workflowState.step === 'generate' && (
           <div className="space-y-4">
             <div className="space-y-3">
               <div className="flex items-center justify-between rounded-lg bg-muted p-3">
@@ -336,7 +358,7 @@ export function ApiKeyGeneratorFull({ accountIndex, network, defaultKeyIndex, on
         )}
 
         {/* Sign Phase */}
-        {step === 'sign' && generatedKeys && (
+        {workflowState.step === 'sign' && workflowState.generatedKeys && (
           <div className="space-y-4">
             <Alert className="border-green-200 dark:border-green-900">
               <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
@@ -352,12 +374,12 @@ export function ApiKeyGeneratorFull({ accountIndex, network, defaultKeyIndex, on
                   variant="ghost"
                   size="icon"
                   className="h-6 w-6"
-                  onClick={() => copyToClipboard(generatedKeys.publicKey, 'Public key')}
+                  onClick={() => copyToClipboard(workflowState.generatedKeys!.publicKey, 'Public key')}
                 >
                   <Copy className="h-3 w-3" />
                 </Button>
               </div>
-              <p className="mt-1 break-all">{generatedKeys.publicKey}</p>
+              <p className="mt-1 break-all">{workflowState.generatedKeys.publicKey}</p>
             </div>
             
             <p className="text-sm text-muted-foreground">
@@ -368,8 +390,11 @@ export function ApiKeyGeneratorFull({ accountIndex, network, defaultKeyIndex, on
               <Button
                 variant="outline"
                 onClick={() => {
-                  setStep('generate')
-                  setGeneratedKeys(null)
+                  setWorkflowState({
+                    step: 'generate',
+                    generatedKeys: null,
+                    info: null
+                  })
                 }}
                 className="flex-1"
               >
@@ -397,7 +422,7 @@ export function ApiKeyGeneratorFull({ accountIndex, network, defaultKeyIndex, on
         )}
 
         {/* Submit Phase */}
-        {step === 'submit' && (
+        {workflowState.step === 'submit' && (
           <div className="space-y-4">
             <div className="flex flex-col items-center py-8">
               <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
@@ -408,10 +433,10 @@ export function ApiKeyGeneratorFull({ accountIndex, network, defaultKeyIndex, on
         )}
 
         {/* Info Messages */}
-        {info && (
+        {workflowState.info && (
           <Alert className="mt-4">
             <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{info}</AlertDescription>
+            <AlertDescription>{workflowState.info}</AlertDescription>
           </Alert>
         )}
 
@@ -433,7 +458,7 @@ export function ApiKeyGeneratorFull({ accountIndex, network, defaultKeyIndex, on
         action: 'Change API Key',
         network: network,
         accountIndex: accountIndex,
-        newPublicKey: generatedKeys?.publicKey || '',
+        newPublicKey: workflowState.generatedKeys?.publicKey || '',
         targetKeyIndex: targetKeyIndex
       }}
     />

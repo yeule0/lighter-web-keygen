@@ -31,9 +31,9 @@ function App() {
     apiKeyIndex: number
     network: 'mainnet' | 'testnet'
   } | null>(null)
-  const [showEncryptOption, setShowEncryptOption] = useState(false)
   const [activeTab, setActiveTab] = useState('generate')
   const [vaultLinkFromUrl, setVaultLinkFromUrl] = useState<string | null>(null)
+  const [showVaultUI, setShowVaultUI] = useState(false)
   
   // Parse URL hash for vault links on mount
   useEffect(() => {
@@ -53,7 +53,6 @@ function App() {
       setAccountIndex(null)
       setApiKeyData(null)
       setShowPrivateKey(false)
-      setShowEncryptOption(false)
     } else if (vaultLinkFromUrl) {
       setActiveTab('vault')
     }
@@ -63,7 +62,6 @@ function App() {
   useEffect(() => {
     setApiKeyData(null)
     setShowPrivateKey(false)
-    setShowEncryptOption(false)
   }, [selectedNetwork, accountIndex])
 
   return (
@@ -174,7 +172,7 @@ function App() {
                       setActiveTab(value)
                       setApiKeyData(null)
                       setShowPrivateKey(false)
-                      setShowEncryptOption(false)
+                      setShowVaultUI(false)
                     }}
                   >
                     <TabsList className="flex w-full gap-2 sm:gap-8 p-0 bg-transparent border-0 h-auto mb-6 sm:mb-12 border-b border-border overflow-x-auto scrollbar-hide">
@@ -213,7 +211,6 @@ function App() {
                         onApiKeyGenerated={(data) => {
                           setApiKeyData(data)
                           setShowPrivateKey(false)
-                          setShowEncryptOption(false)
                         }}
                       />
                     </TabsContent>
@@ -244,7 +241,7 @@ function App() {
                 
                   {apiKeyData && (
                     <div className="card-hover shadow-glow animate-slide-up rounded-lg p-4 sm:p-6 lg:p-8 mt-6 sm:mt-8">
-                      {!showEncryptOption ? (
+                      {!showVaultUI ? (
                         <div className="space-y-4 sm:space-y-6">
                           <div>
                             <span className="mb-2 sm:mb-4 inline-block px-2.5 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-xs font-semibold uppercase tracking-wider rounded-full bg-green-100 dark:bg-green-500/10 text-green-800 dark:text-green-400 border border-green-200 dark:border-green-500/20">SUCCESS</span>
@@ -361,7 +358,7 @@ function App() {
                             Save this configuration securely. The private key cannot be recovered if lost. Keys are generated using cryptographically secure methods and never leave your browser.
                           </p>
                           <Button
-                            onClick={() => setShowEncryptOption(true)}
+                            onClick={() => setShowVaultUI(true)}
                             variant="outline"
                             className="w-full mt-4 transition-all hover:border-primary/50"
                           >
@@ -373,7 +370,7 @@ function App() {
                     ) : (
                       <div className="space-y-4">
                         <Button
-                          onClick={() => setShowEncryptOption(false)}
+                          onClick={() => setShowVaultUI(false)}
                           variant="ghost"
                           size="sm"
                           className="mb-4"
@@ -392,7 +389,7 @@ function App() {
                           label="API Key"
                           onClear={() => {
                             setApiKeyData(null)
-                            setShowEncryptOption(false)
+                            setShowVaultUI(false)
                           }}
                         />
                       </div>

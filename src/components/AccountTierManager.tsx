@@ -16,7 +16,7 @@ export function AccountTierManager({ network }: AccountTierManagerProps) {
   const [currentTier, setCurrentTier] = useState<AccountTier>('standard')
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info' | 'warning'; text: string } | null>(null)
-  const [timeRemaining, setTimeRemaining] = useState<string | null>(null)
+  const [lastUpdateTime, setLastUpdateTime] = useState(Date.now())
   
   // Form fields
   const [privateKey, setPrivateKey] = useState('')
@@ -25,11 +25,35 @@ export function AccountTierManager({ network }: AccountTierManagerProps) {
   const [showPrivateKey, setShowPrivateKey] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   
-  // Check if feature is available (mainnet only)
   const isMainnetOnly = network !== 'mainnet'
   
-  // Current account info for vault
-  const [currentAccountInfo, setCurrentAccountInfo] = useState<AccountInfo | null>(null)
+  const currentAccountInfo: AccountInfo | null = (() => {
+    if (!privateKey || !accountIndex || !apiKeyIndex) return null
+    
+    const accountIndexNum = parseInt(accountIndex, 10)
+    const apiKeyIndexNum = parseInt(apiKeyIndex, 10)
+    
+    if (isNaN(accountIndexNum) || isNaN(apiKeyIndexNum)) return null
+    
+    return {
+      accountIndex: accountIndexNum,
+      apiKeyIndex: apiKeyIndexNum,
+      privateKey: privateKey.startsWith('0x') ? privateKey : `0x${privateKey}`,
+      network
+    }
+  })()
+  
+  const timeRestriction = (() => {
+    lastUpdateTime; // Used to trigger re-renders for time-based updates
+    
+    const check = AccountService.canSwitchBasedOnTime(address)
+    if (!check.canSwitch && check.timeRemaining) {
+      const hours = Math.floor(check.timeRemaining / (1000 * 60 * 60))
+      const minutes = Math.floor((check.timeRemaining % (1000 * 60 * 60)) / (1000 * 60))
+      return `${hours}h ${minutes}m`
+    }
+    return null
+  })()
 
  
   useEffect(() => {
@@ -42,8 +66,7 @@ export function AccountTierManager({ network }: AccountTierManagerProps) {
         
         const tier = AccountService.getCurrentTier(network, accountIdx)
         setCurrentTier(tier)
-      } catch (error) {
-        
+      } catch {
         setCurrentTier('standard')
       }
     }
@@ -52,30 +75,19 @@ export function AccountTierManager({ network }: AccountTierManagerProps) {
   }, [address, network, isMainnetOnly])
 
   useEffect(() => {
-    // Check time restriction on mount and update
-    const checkTimeRestriction = () => {
-      const timeCheck = AccountService.canSwitchBasedOnTime(address)
-      if (!timeCheck.canSwitch && timeCheck.timeRemaining) {
-        const hours = Math.floor(timeCheck.timeRemaining / (1000 * 60 * 60))
-        const minutes = Math.floor((timeCheck.timeRemaining % (1000 * 60 * 60)) / (1000 * 60))
-        setTimeRemaining(`${hours}h ${minutes}m`)
-      } else {
-        setTimeRemaining(null)
-      }
+    if (timeRestriction) {
+      const interval = setInterval(() => {
+        setLastUpdateTime(Date.now()) // Trigger re-render to update derived time
+      }, 60000)
+      
+      return () => clearInterval(interval)
     }
-    
-    checkTimeRestriction()
-    const interval = setInterval(checkTimeRestriction, 60000) // Update every minute
-    
-    return () => clearInterval(interval)
-  }, [address])
+  }, [timeRestriction])
 
-  // Handle vault restore
   const handleVaultRestore = (info: AccountInfo) => {
     setPrivateKey(info.privateKey)
     setAccountIndex(info.accountIndex.toString())
     setApiKeyIndex(info.apiKeyIndex.toString())
-    setCurrentAccountInfo(info)
     setFormError(null)
     
     // Load tier from localStorage
@@ -85,31 +97,12 @@ export function AccountTierManager({ network }: AccountTierManagerProps) {
     }
   }
   
-  // Update current account info when form changes
   useEffect(() => {
-    if (privateKey && accountIndex && apiKeyIndex) {
-      const accountIndexNum = parseInt(accountIndex, 10)
-      const apiKeyIndexNum = parseInt(apiKeyIndex, 10)
-      
-      if (!isNaN(accountIndexNum) && !isNaN(apiKeyIndexNum)) {
-        const info: AccountInfo = {
-          accountIndex: accountIndexNum,
-          apiKeyIndex: apiKeyIndexNum,
-          privateKey: privateKey.startsWith('0x') ? privateKey : `0x${privateKey}`,
-          network
-        }
-        setCurrentAccountInfo(info)
-        
-        // Load tier from localStorage
-        if (!isMainnetOnly) {
-          const tier = AccountService.getCurrentTier(network, accountIndexNum)
-          setCurrentTier(tier)
-        }
-      }
-    } else {
-      setCurrentAccountInfo(null)
+    if (!isMainnetOnly && currentAccountInfo) {
+      const tier = AccountService.getCurrentTier(network, currentAccountInfo.accountIndex)
+      setCurrentTier(tier)
     }
-  }, [privateKey, accountIndex, apiKeyIndex, network, isMainnetOnly])
+  }, [currentAccountInfo?.accountIndex, network, isMainnetOnly])
 
   const validateForm = (): boolean => {
     setFormError(null)
@@ -200,14 +193,7 @@ export function AccountTierManager({ network }: AccountTierManagerProps) {
         setAccountIndex('')
         setApiKeyIndex('')
         setShowPrivateKey(false)
-        setCurrentAccountInfo(null)
-        // Update time restriction
-        const timeCheck = AccountService.canSwitchBasedOnTime(address)
-        if (!timeCheck.canSwitch && timeCheck.timeRemaining) {
-          const hours = Math.floor(timeCheck.timeRemaining / (1000 * 60 * 60))
-          const minutes = Math.floor((timeCheck.timeRemaining % (1000 * 60 * 60)) / (1000 * 60))
-          setTimeRemaining(`${hours}h ${minutes}m`)
-        }
+        setLastUpdateTime(Date.now())
       } else {
         // Check if error indicates account already has this tier
         const errorMessage = result.message.toLowerCase()
@@ -227,12 +213,7 @@ export function AccountTierManager({ network }: AccountTierManagerProps) {
           })
           
           
-          const timeCheck = AccountService.canSwitchBasedOnTime(address)
-          if (!timeCheck.canSwitch && timeCheck.timeRemaining) {
-            const hours = Math.floor(timeCheck.timeRemaining / (1000 * 60 * 60))
-            const minutes = Math.floor((timeCheck.timeRemaining % (1000 * 60 * 60)) / (1000 * 60))
-            setTimeRemaining(`${hours}h ${minutes}m`)
-          }
+          setLastUpdateTime(Date.now())
         } else {
           setMessage({ type: 'error', text: result.message })
         }
@@ -290,12 +271,12 @@ export function AccountTierManager({ network }: AccountTierManagerProps) {
           </div>
         )}
 
-        {timeRemaining && (
+        {timeRestriction && (
           <div className="mb-4 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg flex items-start gap-3">
             <Clock className="h-5 w-5 text-yellow-500 mt-0.5" />
             <div>
               <p className="text-yellow-600 dark:text-yellow-400 font-medium">Time restriction active</p>
-              <p className="text-yellow-600/80 dark:text-yellow-400/80 text-sm">You can switch tiers again in {timeRemaining}</p>
+              <p className="text-yellow-600/80 dark:text-yellow-400/80 text-sm">You can switch tiers again in {timeRestriction}</p>
             </div>
           </div>
         )}
@@ -444,7 +425,7 @@ export function AccountTierManager({ network }: AccountTierManagerProps) {
             
             <Button
               onClick={() => handleTierSwitch('standard')}
-              disabled={isLoading || isMainnetOnly || !!timeRemaining}
+              disabled={isLoading || isMainnetOnly || !!timeRestriction}
               variant={currentTier === 'standard' ? 'outline' : 'secondary'}
               className="w-full"
             >
@@ -505,7 +486,7 @@ export function AccountTierManager({ network }: AccountTierManagerProps) {
             
             <Button
               onClick={() => handleTierSwitch('premium')}
-              disabled={isLoading || isMainnetOnly || !!timeRemaining}
+              disabled={isLoading || isMainnetOnly || !!timeRestriction}
               variant={currentTier === 'premium' ? 'outline' : 'default'}
               className="w-full"
             >

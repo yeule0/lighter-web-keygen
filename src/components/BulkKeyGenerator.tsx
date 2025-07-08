@@ -50,22 +50,39 @@ interface BulkKeyGeneratorProps {
   network: 'mainnet' | 'testnet'
 }
 
+interface BulkGenerationState {
+  currentStep: 'setup' | 'processing' | 'complete'
+  generatedKeys: BulkGenerationResult[]
+  currentKeyIndex: number
+  rateLimitEndTime: number | null
+  lastProgressUpdate: number
+}
+
 export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProps) {
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [bulkState, setBulkState] = useState<BulkGenerationState>({
+    currentStep: 'setup',
+    generatedKeys: [],
+    currentKeyIndex: 0,
+    rateLimitEndTime: null,
+    lastProgressUpdate: Date.now()
+  })
+  
   const [keyCount, setKeyCount] = useState('3')
-  const [progress, setProgress] = useState(0)
-  const [currentStep, setCurrentStep] = useState<'setup' | 'processing' | 'complete'>('setup')
-  const [generatedKeys, setGeneratedKeys] = useState<BulkGenerationResult[]>([])
   const [startingIndex, setStartingIndex] = useState('1')
-  const [currentKeyIndex, setCurrentKeyIndex] = useState(0)
-  const [showPrivateKeys, setShowPrivateKeys] = useState<{ [key: number]: boolean }>({})
-  const [isWaitingForRateLimit, setIsWaitingForRateLimit] = useState(false)
-  const [currentDelaySeconds, setCurrentDelaySeconds] = useState(3)
   const [useManualRateLimit, setUseManualRateLimit] = useState(false)
   const [manualDelaySeconds, setManualDelaySeconds] = useState('5')
+  
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [showPrivateKeys, setShowPrivateKeys] = useState<{ [key: number]: boolean }>({})
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false)
   const [showVaultDialog, setShowVaultDialog] = useState(false)
+  
+  const progress = (bulkState.generatedKeys.length / parseInt(keyCount || '1')) * 100
+  const isWaitingForRateLimit = bulkState.rateLimitEndTime !== null && Date.now() < bulkState.rateLimitEndTime
+  const currentDelaySeconds = isWaitingForRateLimit 
+    ? Math.ceil((bulkState.rateLimitEndTime! - Date.now()) / 1000)
+    : 0
   
   const { signMessageAsync } = useSignMessage()
   const { chain } = useAccount()
@@ -73,19 +90,29 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
   const { toast } = useToast()
 
   useEffect(() => {
+    setBulkState({
+      currentStep: 'setup',
+      generatedKeys: [],
+      currentKeyIndex: 0,
+      rateLimitEndTime: null,
+      lastProgressUpdate: Date.now()
+    })
     setLoading(false)
     setError(null)
-    setProgress(0)
-    setCurrentStep('setup')
-    setGeneratedKeys([])
-    setCurrentKeyIndex(0)
     setShowPrivateKeys({})
-    setIsWaitingForRateLimit(false)
-    setCurrentDelaySeconds(3)
     setUseManualRateLimit(false)
     setManualDelaySeconds('5')
     setShowAdvancedSettings(false)
   }, [network])
+  
+  useEffect(() => {
+    if (isWaitingForRateLimit) {
+      const interval = setInterval(() => {
+        setBulkState(prev => ({ ...prev, lastProgressUpdate: Date.now() }))
+      }, 100)
+      return () => clearInterval(interval)
+    }
+  }, [isWaitingForRateLimit])
 
   const networkConfig = {
     mainnet: {
@@ -114,9 +141,13 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
 
     setLoading(true)
     setError(null)
-    setCurrentStep('processing')
-    setProgress(0)
-    setGeneratedKeys([])
+    setBulkState({
+      currentStep: 'processing',
+      generatedKeys: [],
+      currentKeyIndex: 0,
+      rateLimitEndTime: null,
+      lastProgressUpdate: Date.now()
+    })
 
     try {
       if (chain?.id !== mainnet.id) {
@@ -135,9 +166,7 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
       const MAX_DELAY = 15000 
       const INCREASE_FACTOR = 2.0 
       const DECREASE_FACTOR = 0.8 
-      setCurrentDelaySeconds(useManualRateLimit ? parseInt(manualDelaySeconds) : 3) 
-      
-      setCurrentStep('processing')
+      setBulkState(prev => ({ ...prev, currentStep: 'processing' }))
       const keyPairs = await Promise.all(
         Array.from({ length: count }, async (_, i) => {
           const keyPair = await crypto.generateApiKey()
@@ -166,8 +195,10 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
       let i = 0
       while (i < count) {
         const keyIndex = startIndex + i
-        setCurrentKeyIndex(keyIndex)
-        setProgress(((i + 1) / count) * 100)
+        setBulkState(prev => ({ 
+          ...prev, 
+          currentKeyIndex: keyIndex
+        }))
 
         const { keyPair } = keyPairs[i]
         const nonce = nonceMap.get(keyIndex)
@@ -200,15 +231,16 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
           }
           
           l1Signature = await signMessageAsync({ message: result.messageToSign })
-        } catch (error: any) {
-          if (error?.message?.includes('User rejected') || error?.message?.includes('User denied')) {
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+          if (errorMessage.includes('User rejected') || errorMessage.includes('User denied')) {
             throw new Error('Transaction cancelled by user')
           }
-          throw new Error(`Failed to sign message: ${error?.message || 'Unknown error'}`)
+          throw new Error(`Failed to sign message: ${errorMessage}`)
         }
 
         // Prepare transaction data
-        const { MessageToSign, ...transactionWithoutMessage } = result.transaction
+        const { MessageToSign: _, ...transactionWithoutMessage } = result.transaction
         const txInfo = {
           ...transactionWithoutMessage,
           L1Sig: l1Signature
@@ -236,7 +268,6 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
             
             if (!useManualRateLimit) {
               currentDelay = Math.min(currentDelay * INCREASE_FACTOR, MAX_DELAY)
-              setCurrentDelaySeconds(Math.round(currentDelay / 1000))
             }
           }
           
@@ -250,7 +281,6 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
               isRateLimited = true
               if (!useManualRateLimit) {
                 currentDelay = Math.min(currentDelay * INCREASE_FACTOR, MAX_DELAY)
-                setCurrentDelaySeconds(Math.round(currentDelay / 1000))
               }
             }
           } catch {
@@ -259,9 +289,9 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
           
           if (isRateLimited) {
             console.log(`Rate limited. Increasing delay to ${currentDelay}ms`)
-            setIsWaitingForRateLimit(true)
+            setBulkState(prev => ({ ...prev, rateLimitEndTime: Date.now() + currentDelay }))
             await new Promise(resolve => setTimeout(resolve, currentDelay))
-            setIsWaitingForRateLimit(false)
+            setBulkState(prev => ({ ...prev, rateLimitEndTime: null }))
             continue 
           }
           
@@ -271,7 +301,6 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
         // Success! Decrease delay for next request (only if not using manual rate limit)
         if (!useManualRateLimit) {
           currentDelay = Math.max(currentDelay * DECREASE_FACTOR, MIN_DELAY)
-          setCurrentDelaySeconds(Math.round(currentDelay / 1000))
         }
         
         // Wait a bit for transaction to be processed before next one
@@ -285,20 +314,29 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
           accountIndex,
           network
         })
+        
+        // Update state with the newly completed key
+        setBulkState(prev => ({ 
+          ...prev, 
+          generatedKeys: [...keys]
+        }))
 
         // Move to next key
         i++
         
         if (i < count) {
-          setIsWaitingForRateLimit(true)
+          setBulkState(prev => ({ ...prev, rateLimitEndTime: Date.now() + currentDelay }))
           await new Promise(resolve => setTimeout(resolve, currentDelay)) 
-          setIsWaitingForRateLimit(false)
+          setBulkState(prev => ({ ...prev, rateLimitEndTime: null }))
         }
 
       }
       
-      setGeneratedKeys(keys)
-      setCurrentStep('complete')
+      setBulkState(prev => ({ 
+        ...prev, 
+        generatedKeys: keys,
+        currentStep: 'complete'
+      }))
       
       toast({
         title: "Success!",
@@ -306,7 +344,7 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
       })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Bulk generation failed')
-      setCurrentStep('setup')
+      setBulkState(prev => ({ ...prev, currentStep: 'setup' }))
     } finally {
       setLoading(false)
     }
@@ -314,7 +352,7 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
 
 
   const downloadAllKeys = () => {
-    const content = generatedKeys.map(key => 
+    const content = bulkState.generatedKeys.map(key => 
       `=== API Key #${key.keyIndex} ===\n` +
       `Network: ${key.network}\n` +
       `Base URL: ${key.network === 'mainnet' ? 'https://mainnet.zklighter.elliot.ai' : 'https://testnet.zklighter.elliot.ai'}\n` +
@@ -351,7 +389,7 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
         </div>
       </CardHeader>
       <CardContent className="p-6 sm:p-8 pt-2 sm:pt-4">
-        {currentStep === 'setup' && (
+        {bulkState.currentStep === 'setup' && (
           <div className="space-y-6">
             {error && (
               <Alert variant="destructive">
@@ -535,14 +573,14 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
           </div>
         )}
 
-        {currentStep === 'processing' && (
+        {bulkState.currentStep === 'processing' && (
           <div className="space-y-4">
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm">
                 <span>
                   {isWaitingForRateLimit 
                     ? `Waiting to avoid rate limits...` 
-                    : `Processing key index ${currentKeyIndex}`} ({Math.min(Math.ceil((progress / 100) * parseInt(keyCount)), parseInt(keyCount))} of {keyCount})
+                    : `Processing key index ${bulkState.currentKeyIndex}`} ({bulkState.generatedKeys.length} of {keyCount})
                 </span>
                 <span>{Math.round(progress)}%</span>
               </div>
@@ -581,12 +619,12 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
           </div>
         )}
 
-        {currentStep === 'complete' && generatedKeys.length > 0 && (
+        {bulkState.currentStep === 'complete' && bulkState.generatedKeys.length > 0 && (
           <div className="space-y-6">
             <Alert className="border-green-500/50">
               <CheckCircle2 className="h-4 w-4 text-green-500" />
               <AlertDescription>
-                Successfully generated and registered {generatedKeys.length} API keys!
+                Successfully generated and registered {bulkState.generatedKeys.length} API keys!
               </AlertDescription>
             </Alert>
 
@@ -612,7 +650,7 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
             </div>
 
             <div className="space-y-4 max-h-[600px] overflow-y-auto">
-              {generatedKeys.map((key, index) => (
+              {bulkState.generatedKeys.map((key, index) => (
                 <Card key={index} className="border-green-500/20">
                   <CardContent className="p-4 sm:p-6">
                     <div className="space-y-4 sm:space-y-6">
@@ -760,9 +798,13 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
             <Button
               variant="outline"
               onClick={() => {
-                setCurrentStep('setup')
-                setGeneratedKeys([])
-                setProgress(0)
+                setBulkState({
+                  currentStep: 'setup',
+                  generatedKeys: [],
+                  currentKeyIndex: 0,
+                  rateLimitEndTime: null,
+                  lastProgressUpdate: Date.now()
+                })
                 setShowPrivateKeys({})
               }}
               className="w-full"
@@ -785,7 +827,7 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
         onEscapeKeyDown={(e) => e.preventDefault()}  
       >
         <WalletKeyVault 
-          keys={generatedKeys}
+          keys={bulkState.generatedKeys}
           label="Bulk Generated Keys"
         />
       </DialogContent>
