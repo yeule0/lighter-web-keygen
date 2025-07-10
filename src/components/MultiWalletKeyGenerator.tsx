@@ -79,7 +79,7 @@ export function MultiWalletKeyGenerator({ network }: MultiWalletKeyGeneratorProp
   const [error, setError] = useState<string | null>(null)
   const [walletInput, setWalletInput] = useState('')
   const [wallets, setWallets] = useState<WalletInfo[]>([])
-  const [keyIndex, setKeyIndex] = useState('1')
+  const [keyIndex, setKeyIndex] = useState('2')
   const [useCustomKeyIndices, setUseCustomKeyIndices] = useState(false)
   const [progress, setProgress] = useState(0)
   const [currentStep, setCurrentStep] = useState<'setup' | 'processing' | 'complete'>('setup')
@@ -876,10 +876,10 @@ export function MultiWalletKeyGenerator({ network }: MultiWalletKeyGeneratorProp
                     onChange={(e) => setKeyIndex(e.target.value)}
                     min="0"
                     max="255"
-                    placeholder="Enter key index (1-255)"
+                    placeholder="Enter key index (2-255)"
                   />
                   <p className="text-xs text-muted-foreground">
-                    The same key index will be used for all selected accounts. Index 0 is reserved for frontend use.
+                    The same key index will be used for all selected accounts. Index 0 is reserved for desktop frontend. Index 1 is reserved for mobile. Use 2 or higher for API access.
                   </p>
                 </div>
               )}

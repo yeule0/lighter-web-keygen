@@ -49,7 +49,7 @@ export function ApiKeyGeneratorFull({ accountIndex, network, defaultKeyIndex, on
     info: null
   })
   
-  const [targetKeyIndex, setTargetKeyIndex] = useState(defaultKeyIndex?.toString() || '1')
+  const [targetKeyIndex, setTargetKeyIndex] = useState(defaultKeyIndex?.toString() || '2')
   
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -301,7 +301,7 @@ export function ApiKeyGeneratorFull({ accountIndex, network, defaultKeyIndex, on
                   className="mt-1"
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  Index 0 is reserved for frontend. Use 1 or higher for API access.
+                  Index 0 is reserved for desktop frontend. Index 1 is reserved for mobile. Use 2 or higher for API access.
                 </p>
               </div>
               
