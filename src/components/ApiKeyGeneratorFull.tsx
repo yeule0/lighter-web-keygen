@@ -68,7 +68,7 @@ export function ApiKeyGeneratorFull({ accountIndex, network, defaultKeyIndex, on
       info: null
     })
     setError(null)
-    setTargetKeyIndex(defaultKeyIndex?.toString() || '1')
+    setTargetKeyIndex(defaultKeyIndex?.toString() || '2')
   }, [network, accountIndex, defaultKeyIndex])
   
   const networkConfig = {
