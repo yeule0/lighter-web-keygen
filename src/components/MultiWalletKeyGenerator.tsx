@@ -49,6 +49,7 @@ interface WalletInfo {
   accounts: AccountInfo[]
   checking: boolean
   error?: string
+  isConnected?: boolean
 }
 
 interface AccountInfo {
@@ -128,13 +129,59 @@ export function MultiWalletKeyGenerator({ network }: MultiWalletKeyGeneratorProp
   }, [network])
 
   useEffect(() => {
-    if (connectedAddress && !wallets.some(w => w.addressLowercase === connectedAddress.toLowerCase())) {
-      checkWalletAccounts(connectedAddress)
+    if (connectedAddress) {
+      const addressLower = connectedAddress.toLowerCase()
+      
+      
+      const existingWalletIndex = wallets.findIndex(w => w.addressLowercase === addressLower)
+      
+      if (existingWalletIndex !== -1) {
+        setWallets(prev => prev.map((w, index) => ({
+          ...w,
+          isConnected: index === existingWalletIndex
+        })))
+      } else {
+        setWallets(prev => {
+          const updated = prev.map(w => ({ ...w, isConnected: false }))
+          return updated
+        })
+        
+        
+        checkWalletAccounts(connectedAddress, true)
+      }
     }
-    
+  }, [connectedAddress, network])
+  
+  useEffect(() => {
     const handleAccountsChanged = (accounts: string[]) => {
-      if (accounts.length > 0 && accounts[0] && !wallets.some(w => w.addressLowercase === accounts[0].toLowerCase())) {
-        checkWalletAccounts(accounts[0])
+      if (accounts.length > 0 && accounts[0]) {
+        const newAddress = accounts[0].toLowerCase()
+        
+        
+        if (newAddress === connectedAddress?.toLowerCase()) {
+          return
+        }
+        
+        
+        const existingWalletIndex = wallets.findIndex(w => w.addressLowercase === newAddress)
+        
+        if (existingWalletIndex !== -1) {
+          
+          setWallets(prev => prev.map((w, index) => ({
+            ...w,
+            isConnected: index === existingWalletIndex
+          })))
+        } else {
+          
+          setWallets(prev => {
+            
+            const updated = prev.map(w => ({ ...w, isConnected: false }))
+            return updated
+          })
+          
+          
+          checkWalletAccounts(accounts[0], true)
+        }
       }
     }
     
@@ -166,14 +213,15 @@ export function MultiWalletKeyGenerator({ network }: MultiWalletKeyGeneratorProp
     setWalletInput('')
   }
 
-  const checkWalletAccounts = async (walletAddress: string) => {
+  const checkWalletAccounts = async (walletAddress: string, isConnected: boolean = false) => {
     const addressLowercase = walletAddress.toLowerCase()
     
     setWallets(prev => [...prev, {
       address: walletAddress,
       addressLowercase: addressLowercase,
       accounts: [],
-      checking: true
+      checking: true,
+      isConnected: isConnected
     }])
 
     try {
@@ -755,7 +803,7 @@ export function MultiWalletKeyGenerator({ network }: MultiWalletKeyGeneratorProp
                           <span className="font-mono text-sm">
                             {wallet.address.slice(0, 6)}...{wallet.address.slice(-4)}
                           </span>
-                          {wallet.addressLowercase === connectedAddress?.toLowerCase() && (
+                          {wallet.isConnected && (
                             <Badge variant="secondary">Connected</Badge>
                           )}
                         </div>
