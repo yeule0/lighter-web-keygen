@@ -14,6 +14,8 @@ import { Progress } from '@/components/ui/progress'
 import { Label } from '@/components/ui/label'
 import { WalletKeyVault } from '@/components/WalletKeyVault'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
+import { BulkWalletImport } from '@/components/BulkWalletImport'
+import { PrivateKeySigner } from '@/lib/private-key-signer'
 import { 
   AlertCircle, 
   CheckCircle2, 
@@ -36,7 +38,8 @@ import {
   TrendingDown,
   ChevronDown,
   Settings2,
-  Shield
+  Shield,
+  FileJson
 } from 'lucide-react'
 
 interface MultiWalletKeyGeneratorProps {
@@ -50,6 +53,8 @@ interface WalletInfo {
   checking: boolean
   error?: string
   isConnected?: boolean
+  privateKey?: string  
+  isBulkImported?: boolean  
 }
 
 interface AccountInfo {
@@ -93,6 +98,7 @@ export function MultiWalletKeyGenerator({ network }: MultiWalletKeyGeneratorProp
   const [manualDelaySeconds, setManualDelaySeconds] = useState('5')
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false)
   const [showVaultDialog, setShowVaultDialog] = useState(false)
+  const [showBulkImport, setShowBulkImport] = useState(false)
   
   const { address: connectedAddress, connector } = useAccount()
   const { signMessageAsync } = useSignMessage()
@@ -213,7 +219,7 @@ export function MultiWalletKeyGenerator({ network }: MultiWalletKeyGeneratorProp
     setWalletInput('')
   }
 
-  const checkWalletAccounts = async (walletAddress: string, isConnected: boolean = false) => {
+  const checkWalletAccounts = async (walletAddress: string, isConnected: boolean = false, privateKey?: string) => {
     const addressLowercase = walletAddress.toLowerCase()
     
     setWallets(prev => [...prev, {
@@ -221,7 +227,9 @@ export function MultiWalletKeyGenerator({ network }: MultiWalletKeyGeneratorProp
       addressLowercase: addressLowercase,
       accounts: [],
       checking: true,
-      isConnected: isConnected
+      isConnected: isConnected,
+      privateKey: privateKey,
+      isBulkImported: !!privateKey
     }])
 
     try {
@@ -299,7 +307,103 @@ export function MultiWalletKeyGenerator({ network }: MultiWalletKeyGeneratorProp
     const walletsToCheck = [...wallets]
     setWallets([])
     for (const wallet of walletsToCheck) {
-      await checkWalletAccounts(wallet.address)
+      await checkWalletAccounts(wallet.address, wallet.isConnected, wallet.privateKey)
+    }
+  }
+
+  const handleBulkImport = async (importedWallets: any[]) => {
+    setShowBulkImport(false)
+    setError(null)
+    
+    // Process bulk imported wallets
+    for (const imported of importedWallets) {
+      const addressLowercase = imported.addressLowercase
+      
+      
+      if (wallets.some(w => w.addressLowercase === addressLowercase)) {
+        continue
+      }
+      
+      
+      setWallets(prev => [...prev, {
+        address: imported.address,
+        addressLowercase: addressLowercase,
+        accounts: [],
+        checking: true,
+        privateKey: imported.privateKey,
+        isBulkImported: true,
+        isConnected: false
+      }])
+      
+      
+      try {
+        const response = await fetch(
+          `${networkConfig[network].url}/api/v1/accountsByL1Address?l1_address=${imported.address}`,
+          {
+            headers: {
+              'Accept': 'application/json',
+            }
+          }
+        )
+
+        if (!response.ok) {
+          const responseText = await response.text()
+          let errorData
+          try {
+            errorData = JSON.parse(responseText)
+          } catch {
+            throw new Error('Failed to fetch accounts')
+          }
+          
+          if (errorData.message === 'account not found' || response.status === 404) {
+            setWallets(prev => prev.map(w => 
+              w.addressLowercase === addressLowercase
+                ? {
+                    ...w,
+                    accounts: [],
+                    checking: false,
+                    error: `No accounts found on ${network}. You need to register an account on Lighter first.`
+                  }
+                : w
+            ))
+            continue
+          } else {
+            throw new Error(errorData.message || 'Failed to fetch accounts')
+          }
+        }
+
+        const data = await response.json()
+        const subAccounts = data.sub_accounts || []
+        
+       
+        const foundAccounts: AccountInfo[] = subAccounts.map((acc: any) => ({
+          accountIndex: acc.index,
+          isMainAccount: acc.index === 0,
+          selected: true 
+        }))
+
+        
+        setWallets(prev => prev.map(w => 
+          w.addressLowercase === addressLowercase
+            ? {
+                ...w,
+                accounts: foundAccounts,
+                checking: false,
+                error: foundAccounts.length === 0 ? `No accounts found on ${network}` : undefined
+              }
+            : w
+        ))
+      } catch (err) {
+        setWallets(prev => prev.map(w => 
+          w.addressLowercase === addressLowercase
+            ? {
+                ...w,
+                checking: false,
+                error: err instanceof Error ? err.message : 'Failed to check accounts'
+              }
+            : w
+        ))
+      }
     }
   }
 
@@ -462,23 +566,31 @@ export function MultiWalletKeyGenerator({ network }: MultiWalletKeyGeneratorProp
       for (const [walletAddress, accounts] of accountsByWallet) {
         setProcessingStatus(`Processing wallet ${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`)
         
-        // Check if we need to switch wallets
-        const currentConnectedAddress = await getCurrentConnectedAddress()
-        if (currentConnectedAddress?.toLowerCase() !== walletAddress.toLowerCase()) {
-          setCurrentOperation(`Please switch to wallet ${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)} in your wallet provider`)
+        
+        const walletInfo = wallets.find(w => w.address.toLowerCase() === walletAddress.toLowerCase())
+        const isBulkImported = walletInfo?.isBulkImported || false
+        const privateKey = walletInfo?.privateKey
+        
+        
+        if (!isBulkImported) {
           
-          // Show a more prominent message
-          toast({
-            title: "Action Required: Switch Account",
-            description: `Please switch to account ${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)} in MetaMask/wallet (do NOT disconnect)`,
-            duration: 15000,
-          })
+          const currentConnectedAddress = await getCurrentConnectedAddress()
+          if (currentConnectedAddress?.toLowerCase() !== walletAddress.toLowerCase()) {
+            setCurrentOperation(`Please switch to wallet ${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)} in your wallet provider`)
+            
+            
+            toast({
+              title: "Action Required: Switch Account",
+              description: `Please switch to account ${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)} in MetaMask/wallet (do NOT disconnect)`,
+              duration: 15000,
+            })
 
-          // Wait for wallet switch
-          const switched = await waitForWalletSwitch(walletAddress)
-          if (!switched) {
-            // More helpful error message
-            throw new Error(`Timed out waiting for wallet switch to ${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}. Please switch accounts in your wallet (without disconnecting) and try again.`)
+            
+            const switched = await waitForWalletSwitch(walletAddress)
+            if (!switched) {
+              
+              throw new Error(`Timed out waiting for wallet switch to ${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}. Please switch accounts in your wallet (without disconnecting) and try again.`)
+            }
           }
         }
 
@@ -498,21 +610,20 @@ export function MultiWalletKeyGenerator({ network }: MultiWalletKeyGeneratorProp
 
         
         setCurrentOperation(`Fetching nonces for wallet ${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`)
-        const noncePromises = accounts.map((account) => {
+        const noncePromises = accounts.map(async (account) => {
           const nonceUrl = `${networkConfig[network].url}/api/v1/nextNonce?account_index=${account.accountIndex}&api_key_index=${account.keyIndex}`
-          return fetch(nonceUrl)
-            .then(res => {
-              if (!res.ok) {
-                return res.text().then(text => {
-                  throw new Error(`Failed to fetch nonce for account ${account.accountIndex}: ${res.status} ${text}`)
-                })
-              }
-              return res.json()
-            })
-            .then(data => ({ 
-              key: `${account.accountIndex}-${account.keyIndex}`,
-              nonce: data.nonce 
-            }))
+          const res = await fetch(nonceUrl)
+          
+          if (!res.ok) {
+            const text = await res.text()
+            throw new Error(`Failed to fetch nonce for account ${account.accountIndex}: ${res.status} ${text}`)
+          }
+          
+          const data = await res.json()
+          return { 
+            key: `${account.accountIndex}-${account.keyIndex}`,
+            nonce: data.nonce 
+          }
         })
         
         const nonces = await Promise.all(noncePromises)
@@ -544,25 +655,37 @@ export function MultiWalletKeyGenerator({ network }: MultiWalletKeyGeneratorProp
             chainId: networkConfig[network].chainId,
           })
           
-          // Switch to mainnet for L1 signature if needed
-          setCurrentOperation('Please sign the transaction in your wallet...')
+          
           let l1Signature: string
-          try {
-            if (chain && chain.id !== mainnet.id) {
-              setCurrentOperation('Switching to Ethereum mainnet for L1 signature...')
-              try {
-                await switchChainAsync({ chainId: mainnet.id })
-              } catch (switchError: any) {
-                throw new Error('Please switch to Ethereum mainnet to sign the transaction')
-              }
-            }
+          
+          if (isBulkImported && privateKey) {
             
-            l1Signature = await signMessageAsync({ message: result.messageToSign })
-          } catch (error: any) {
-            if (error?.message?.includes('User rejected') || error?.message?.includes('User denied')) {
-              throw new Error('Transaction cancelled by user')
+            setCurrentOperation(`Signing transaction for Account #${account.accountIndex}...`)
+            try {
+              const signer = new PrivateKeySigner(privateKey)
+              l1Signature = await signer.signMessage(result.messageToSign)
+            } catch (error: any) {
+              throw new Error(`Failed to sign with private key: ${error?.message || 'Unknown error'}`)
             }
-            throw new Error(`Failed to sign message: ${error?.message || 'Unknown error'}`)
+          } else {
+            setCurrentOperation('Please sign the transaction in your wallet...')
+            try {
+              if (chain && chain.id !== mainnet.id) {
+                setCurrentOperation('Switching to Ethereum mainnet for L1 signature...')
+                try {
+                  await switchChainAsync({ chainId: mainnet.id })
+                } catch (switchError: any) {
+                  throw new Error('Please switch to Ethereum mainnet to sign the transaction')
+                }
+              }
+              
+              l1Signature = await signMessageAsync({ message: result.messageToSign })
+            } catch (error: any) {
+              if (error?.message?.includes('User rejected') || error?.message?.includes('User denied')) {
+                throw new Error('Transaction cancelled by user')
+              }
+              throw new Error(`Failed to sign message: ${error?.message || 'Unknown error'}`)
+            }
           }
 
           // Prepare and submit transaction
@@ -761,15 +884,25 @@ export function MultiWalletKeyGenerator({ network }: MultiWalletKeyGeneratorProp
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <label className="text-sm font-medium">Wallet Addresses</label>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={refreshAllWallets}
-                  disabled={wallets.length === 0}
-                >
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Refresh All
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowBulkImport(true)}
+                  >
+                    <FileJson className="h-4 w-4 mr-2" />
+                    Bulk Import
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={refreshAllWallets}
+                    disabled={wallets.length === 0}
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Refresh All
+                  </Button>
+                </div>
               </div>
               <div className="flex gap-2">
                 <Input
@@ -805,6 +938,12 @@ export function MultiWalletKeyGenerator({ network }: MultiWalletKeyGeneratorProp
                           </span>
                           {wallet.isConnected && (
                             <Badge variant="secondary">Connected</Badge>
+                          )}
+                          {wallet.isBulkImported && (
+                            <Badge variant="outline" className="text-xs">
+                              <FileJson className="h-3 w-3 mr-1" />
+                              Imported
+                            </Badge>
                           )}
                         </div>
                         <Button
@@ -1317,6 +1456,23 @@ export function MultiWalletKeyGenerator({ network }: MultiWalletKeyGeneratorProp
           keys={generatedKeys}
           label="Multi-Account Keys"
         />
+      </DialogContent>
+    </Dialog>
+
+    <Dialog 
+      open={showBulkImport} 
+      onOpenChange={setShowBulkImport}
+    >
+      <DialogContent 
+        className="max-w-3xl p-0 gap-0 overflow-hidden"
+        onPointerDownOutside={(e) => e.preventDefault()}
+      >
+        <div className="p-6">
+          <BulkWalletImport 
+            onImport={handleBulkImport}
+            onCancel={() => setShowBulkImport(false)}
+          />
+        </div>
       </DialogContent>
     </Dialog>
     </>
