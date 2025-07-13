@@ -1,5 +1,5 @@
 [build]
-  command = "VITE_COMMIT_SHA=$COMMIT_REF npm run build && npm run build:offline && cp lighter-keygen-offline.zip dist/"
+  command = "export VITE_COMMIT_SHA=$COMMIT_REF && npm run build && npm run build:offline && cp lighter-keygen-offline.zip dist/"
   publish = "dist"
 
 [[headers]]
