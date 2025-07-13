@@ -60,3 +60,8 @@ certs/
 
 *.tsbuildinfo
 next-env.d.ts.eslintcache
+
+
+offline-bundle/
+lighter-keygen-offline.zip
+public/lighter-keygen-offline.zip

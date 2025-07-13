@@ -17,6 +17,7 @@ import { Sparkles, Copy, Eye, EyeOff, LogOut, Key, Layers, Wallet, Unlock, Shiel
 import { ThemeToggle } from './components/theme-toggle'
 import { ConnectKitWrapper } from './components/ConnectKitWrapper'
 import { DomainWarning } from './components/DomainWarning'
+import { DownloadOfflineButton } from './components/DownloadOfflineButton'
 
 function App() {
   const { address, isConnected } = useAccount()
@@ -77,6 +78,7 @@ function App() {
                 <span className="font-normal text-sm tracking-wide">Lighter</span>
               </a>
               <div className="flex items-center gap-3">
+                <DownloadOfflineButton />
                 {isConnected && address && (
                   <div className="flex items-center gap-2">
                     <span className="text-body-small text-secondary font-mono">

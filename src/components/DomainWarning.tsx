@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button'
 const OFFICIAL_DOMAINS = [
   'lighterkey.netlify.app',
   'localhost:5173',
-  'localhost:4173'
+  'localhost:4173',
+  'localhost:8080'  
 ]
 
 export function DomainWarning() {
