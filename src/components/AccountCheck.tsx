@@ -47,6 +47,7 @@ export function AccountCheck({ address, onAccountFound, onNetworkChange }: Accou
     
     setLoading(true)
     setError(null)
+    setSelectedAccountIndex(null) 
     
     try {
       const response = await fetch(
@@ -87,7 +88,7 @@ export function AccountCheck({ address, onAccountFound, onNetworkChange }: Accou
       const subAccounts = data.sub_accounts || []
       setAccounts(subAccounts)
       
-      if (subAccounts.length === 1 && onAccountFound) {
+      if (subAccounts.length === 1 && selectedAccountIndex === null && onAccountFound) {
         setSelectedAccountIndex(subAccounts[0].index)
         onAccountFound(subAccounts[0].index)
       } else if (subAccounts.length > 1) {
@@ -231,6 +232,14 @@ export function AccountCheck({ address, onAccountFound, onNetworkChange }: Accou
               </div>
             ) : (
               <div className="space-y-2">
+                {selectedAccountIndex === null && (
+                  <Alert className="border-amber-500/50">
+                    <AlertCircle className="h-4 w-4 text-amber-500" />
+                    <AlertDescription className="text-sm">
+                      Please select an account to continue
+                    </AlertDescription>
+                  </Alert>
+                )}
                 {accounts.map((account, index) => {
                   // Check if it's a sub-account based on the large index value
                   const isSubAccount = account.index > 1000000;

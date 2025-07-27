@@ -65,6 +65,10 @@ function App() {
     setShowPrivateKey(false)
   }, [selectedNetwork, accountIndex])
 
+  useEffect(() => {
+    setAccountIndex(null)
+  }, [selectedNetwork])
+
   return (
     <ThemeProvider defaultTheme="dark" storageKey="lighter-theme">
       <ConnectKitWrapper>
