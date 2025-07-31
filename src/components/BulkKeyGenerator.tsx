@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useSignMessage, useAccount, useSwitchChain } from 'wagmi'
 import { mainnet } from 'wagmi/chains'
 import { LighterFullCrypto } from '../lib/lighter-full'
@@ -14,6 +14,8 @@ import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { WalletKeyVault } from '@/components/WalletKeyVault'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
+import { PrivateKeySigner } from '@/lib/private-key-signer'
+import { isAddress } from 'viem'
 
 interface BulkGenerationResult {
   privateKey: string
@@ -41,7 +43,10 @@ import {
   TrendingDown,
   ChevronDown,
   Settings2,
-  Shield
+  Shield,
+  FileJson,
+  Upload,
+  Info
 } from 'lucide-react'
 
 interface BulkKeyGeneratorProps {
@@ -58,7 +63,7 @@ interface BulkGenerationState {
   lastProgressUpdate: number
 }
 
-export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProps) {
+export function BulkKeyGenerator({ accountIndex, network, address }: BulkKeyGeneratorProps) {
   const [bulkState, setBulkState] = useState<BulkGenerationState>({
     currentStep: 'setup',
     generatedKeys: [],
@@ -78,10 +83,15 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false)
   const [showVaultDialog, setShowVaultDialog] = useState(false)
   
+  const [showJsonImport, setShowJsonImport] = useState(false)
+  const [importedPrivateKey, setImportedPrivateKey] = useState<string | null>(null)
+  const [_importedAddress, setImportedAddress] = useState<string | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  
   const progress = (bulkState.generatedKeys.length / parseInt(keyCount || '1')) * 100
   const isWaitingForRateLimit = bulkState.rateLimitEndTime !== null && Date.now() < bulkState.rateLimitEndTime
-  const currentDelaySeconds = isWaitingForRateLimit 
-    ? Math.ceil((bulkState.rateLimitEndTime! - Date.now()) / 1000)
+  const currentDelaySeconds = isWaitingForRateLimit && bulkState.rateLimitEndTime
+    ? Math.ceil((bulkState.rateLimitEndTime - Date.now()) / 1000)
     : 0
   
   const { signMessageAsync } = useSignMessage()
@@ -103,6 +113,8 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
     setUseManualRateLimit(false)
     setManualDelaySeconds('5')
     setShowAdvancedSettings(false)
+    setImportedPrivateKey(null)
+    setImportedAddress(null)
   }, [network])
   
   useEffect(() => {
@@ -123,6 +135,84 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
       url: 'https://testnet.zklighter.elliot.ai',
       chainId: 300
     }
+  }
+
+  const handleFileUpload = useCallback(async (file: File) => {
+    setError(null)
+
+    try {
+      const text = await file.text()
+      let data: { address?: string; private_key?: string }
+      
+      try {
+        data = JSON.parse(text)
+      } catch {
+        throw new Error('Invalid JSON format')
+      }
+
+      if (Array.isArray(data)) {
+        throw new Error('JSON must contain a single wallet object, not an array')
+      }
+
+      if (!data.address || !data.private_key) {
+        throw new Error('JSON must contain both "address" and "private_key" fields')
+      }
+
+      if (!isAddress(data.address)) {
+        throw new Error(`Invalid address: ${data.address}`)
+      }
+
+      if (!data.private_key.match(/^0x[a-fA-F0-9]{64}$/)) {
+        throw new Error('Invalid private key format. Must be 0x followed by 64 hex characters')
+      }
+
+      try {
+        const signer = new PrivateKeySigner(data.private_key)
+        if (!signer.verifyAddress(data.address)) {
+          throw new Error('Private key does not match the provided address')
+        }
+      } catch {
+        throw new Error('Failed to verify private key')
+      }
+      if (data.address.toLowerCase() !== address.toLowerCase()) {
+        throw new Error(`Imported address ${data.address} does not match the current account ${address}`)
+      }
+
+      setImportedPrivateKey(data.private_key)
+      setImportedAddress(data.address)
+      setShowJsonImport(false)
+      
+      toast({
+        title: "JSON Imported Successfully",
+        description: "Private key will be used for automatic signing",
+      })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to process file')
+    }
+  }, [address, toast])
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+
+    const file = e.dataTransfer.files[0]
+    if (file && file.type === 'application/json') {
+      handleFileUpload(file)
+    } else {
+      setError('Please upload a JSON file')
+    }
+  }, [handleFileUpload])
+
+  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      handleFileUpload(file)
+    }
+  }, [handleFileUpload])
+
+  const clearImportedKey = () => {
+    setImportedPrivateKey(null)
+    setImportedAddress(null)
   }
 
   const handleBulkGenerate = async () => {
@@ -223,20 +313,30 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
           throw new Error(err instanceof Error ? err.message : 'Failed to create transaction')
         }
         
-        // Switch to mainnet for L1 signature if needed
         let l1Signature: string
-        try {
-          if (chain && chain.id !== mainnet.id) {
-            await switchChainAsync({ chainId: mainnet.id })
+        
+        if (importedPrivateKey) {
+          try {
+            const signer = new PrivateKeySigner(importedPrivateKey)
+            l1Signature = await signer.signMessage(result.messageToSign)
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+            throw new Error(`Failed to sign with imported key: ${errorMessage}`)
           }
-          
-          l1Signature = await signMessageAsync({ message: result.messageToSign })
-        } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-          if (errorMessage.includes('User rejected') || errorMessage.includes('User denied')) {
-            throw new Error('Transaction cancelled by user')
+        } else {
+          try {
+            if (chain && chain.id !== mainnet.id) {
+              await switchChainAsync({ chainId: mainnet.id })
+            }
+            
+            l1Signature = await signMessageAsync({ message: result.messageToSign })
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+            if (errorMessage.includes('User rejected') || errorMessage.includes('User denied')) {
+              throw new Error('Transaction cancelled by user')
+            }
+            throw new Error(`Failed to sign message: ${errorMessage}`)
           }
-          throw new Error(`Failed to sign message: ${errorMessage}`)
         }
 
         // Prepare transaction data
@@ -396,6 +496,50 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
+            )}
+            
+            {/* JSON Import Section */}
+            {importedPrivateKey ? (
+              <Alert className="border-green-500/50">
+                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                <AlertDescription className="flex items-center justify-between">
+                  <span>Using imported key for automatic signing</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearImportedKey}
+                    className="h-auto py-1"
+                  >
+                    Clear
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            ) : (
+              <div className="rounded-xl border border-border/40 dark:border-white/10 p-4 sm:p-6 space-y-3 sm:space-y-4 bg-muted/30 dark:bg-white/[0.02]">
+                <div className="flex items-start gap-2 sm:gap-3">
+                  <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10 dark:bg-white/10">
+                    <Info className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary dark:text-white" />
+                  </div>
+                  <div className="flex-1 space-y-3 sm:space-y-4">
+                    <h3 className="text-sm sm:text-base font-medium tracking-tight">Optional: Import JSON for automatic signing</h3>
+                    <p className="text-xs sm:text-body-small text-secondary">
+                      Import a JSON file with your wallet's private key to automatically sign all transactions without manual approval.
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowJsonImport(true)}
+                      className="w-full sm:w-auto"
+                    >
+                      <FileJson className="h-4 w-4 mr-2" />
+                      Import JSON
+                    </Button>
+                    <p className="text-[11px] sm:text-xs text-muted-foreground/80 font-mono">
+                      Expected format: {`{ "address": "0x...", "private_key": "0x..." }`}
+                    </p>
+                  </div>
+                </div>
+              </div>
             )}
             
             <div className="space-y-4">
@@ -830,6 +974,93 @@ export function BulkKeyGenerator({ accountIndex, network }: BulkKeyGeneratorProp
           keys={bulkState.generatedKeys}
           label="Bulk Generated Keys"
         />
+      </DialogContent>
+    </Dialog>
+
+    <Dialog 
+      open={showJsonImport} 
+      onOpenChange={setShowJsonImport}
+    >
+      <DialogContent 
+        className="max-w-2xl p-0 gap-0 overflow-hidden"
+        onPointerDownOutside={(e) => e.preventDefault()}
+      >
+        <div className="p-6">
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <h2 className="text-2xl font-semibold tracking-tight flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <Upload className="h-5 w-5 text-primary" />
+                </div>
+                Import Private Key
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Import a JSON file containing your wallet's private key for automatic transaction signing
+              </p>
+            </div>
+
+            <Alert className="border-amber-500/50">
+              <AlertTriangle className="h-4 w-4 text-amber-500" />
+              <AlertDescription>
+                <strong>Security Warning:</strong> Only import keys you own. The private key will be used to automatically sign all transactions for this bulk generation session.
+              </AlertDescription>
+            </Alert>
+
+            <div
+              className={`relative rounded-xl border-2 border-dashed p-12 text-center transition-all ${
+                isDragging 
+                  ? 'border-primary bg-primary/5 scale-[1.02]' 
+                  : 'border-muted-foreground/20 hover:border-muted-foreground/40 bg-muted/30'
+              }`}
+              onDragOver={(e) => {
+                e.preventDefault()
+                setIsDragging(true)
+              }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={handleDrop}
+            >
+              <div className="mx-auto w-fit p-3 rounded-xl bg-muted/50 mb-4">
+                <FileJson className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <h3 className="text-base font-medium mb-2">
+                Drop your JSON file here or click to browse
+              </h3>
+              <p className="text-sm text-muted-foreground mb-6 font-mono">
+                Expected format: {"{"} "address": "0x...", "private_key": "0x..." {"}"}
+              </p>
+              <input
+                type="file"
+                accept="application/json"
+                onChange={handleFileSelect}
+                className="hidden"
+                id="bulk-file-upload"
+              />
+              <label htmlFor="bulk-file-upload">
+                <Button 
+                  variant="outline" 
+                  size="default"
+                  className="cursor-pointer"
+                  asChild
+                >
+                  <span>
+                    <Upload className="h-4 w-4 mr-2" />
+                    Select JSON File
+                  </span>
+                </Button>
+              </label>
+            </div>
+
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowJsonImport(false)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
     </>
