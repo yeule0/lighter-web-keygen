@@ -8,12 +8,13 @@ import { MultiWalletKeyGenerator } from './components/MultiWalletKeyGenerator'
 import { WalletKeyRetriever } from './components/WalletKeyRetriever'
 import { WalletKeyVault } from './components/WalletKeyVault'
 import { AccountTierManager } from './components/AccountTierManager'
+import { AuthTokenGenerator } from './components/AuthTokenGenerator'
 import { ThemeProvider } from './components/theme-provider'
 import { Toaster } from '@/components/ui/toaster'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { copyToClipboard } from '@/lib/clipboard'
-import { Sparkles, Copy, Eye, EyeOff, LogOut, Key, Layers, Wallet, Unlock, Shield, Lock } from 'lucide-react'
+import { Sparkles, Copy, Eye, EyeOff, LogOut, Layers, Wallet, Unlock, Shield, Lock, KeyRound } from 'lucide-react'
 import { ThemeToggle } from './components/theme-toggle'
 import { ConnectKitWrapper } from './components/ConnectKitWrapper'
 import { DomainWarning } from './components/DomainWarning'
@@ -181,32 +182,40 @@ function App() {
                       setShowVaultUI(false)
                     }}
                   >
-                    <TabsList className="flex w-full gap-2 sm:gap-8 p-0 bg-transparent border-0 h-auto mb-6 sm:mb-12 border-b border-border overflow-x-auto scrollbar-hide">
-                      <TabsTrigger value="generate" className="tab-text text-sm sm:text-base data-[state=active]:border-b-2 data-[state=active]:border-foreground pb-3 sm:pb-4 rounded-none bg-transparent border-b-2 border-transparent transition-all duration-200 data-[state=active]:text-foreground text-secondary whitespace-nowrap flex-shrink-0">
-                        <Key className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
-                        <span className="hidden sm:inline">Generate</span>
-                        <span className="sm:hidden">Gen</span>
-                      </TabsTrigger>
-                      <TabsTrigger value="bulk" className="tab-text text-sm sm:text-base data-[state=active]:border-b-2 data-[state=active]:border-foreground pb-3 sm:pb-4 rounded-none bg-transparent border-b-2 border-transparent transition-all duration-200 data-[state=active]:text-foreground text-secondary whitespace-nowrap flex-shrink-0">
-                        <Layers className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
-                        Bulk
-                      </TabsTrigger>
-                      <TabsTrigger value="multi" className="tab-text text-sm sm:text-base data-[state=active]:border-b-2 data-[state=active]:border-foreground pb-3 sm:pb-4 rounded-none bg-transparent border-b-2 border-transparent transition-all duration-200 data-[state=active]:text-foreground text-secondary whitespace-nowrap flex-shrink-0">
-                        <Wallet className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
-                        <span className="hidden sm:inline">Multi-Account</span>
-                        <span className="sm:hidden">Multi</span>
-                      </TabsTrigger>
-                      <TabsTrigger value="vault" className="tab-text text-sm sm:text-base data-[state=active]:border-b-2 data-[state=active]:border-foreground pb-3 sm:pb-4 rounded-none bg-transparent border-b-2 border-transparent transition-all duration-200 data-[state=active]:text-foreground text-secondary whitespace-nowrap flex-shrink-0">
-                        <Unlock className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
-                        <span className="hidden sm:inline">Decrypt Vault</span>
-                        <span className="sm:hidden">Decrypt</span>
-                      </TabsTrigger>
-                      <TabsTrigger value="tier" className="tab-text text-sm sm:text-base data-[state=active]:border-b-2 data-[state=active]:border-foreground pb-3 sm:pb-4 rounded-none bg-transparent border-b-2 border-transparent transition-all duration-200 data-[state=active]:text-foreground text-secondary whitespace-nowrap flex-shrink-0">
-                        <Shield className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
-                        <span className="hidden sm:inline">Account Tier</span>
-                        <span className="sm:hidden">Tier</span>
-                      </TabsTrigger>
-                    </TabsList>
+                    <div className="relative mb-6 sm:mb-12 -mx-4 sm:mx-0">
+                      <div className="overflow-x-auto scrollbar-hide px-4 sm:px-0">
+                        <TabsList className="flex w-max sm:w-full gap-1 sm:gap-4 lg:gap-6 bg-transparent border-0 h-auto border-b border-border sm:justify-center min-w-full py-0">
+                          <TabsTrigger value="generate" className="tab-text text-xs sm:text-sm lg:text-base data-[state=active]:border-b-2 data-[state=active]:border-foreground pb-2.5 sm:pb-3 lg:pb-4 rounded-none bg-transparent border-b-2 border-transparent transition-all duration-200 data-[state=active]:text-foreground text-secondary whitespace-nowrap flex-shrink-0 px-2 sm:px-3 lg:px-4">
+                          <span className="hidden sm:inline">Generate</span>
+                          <span className="sm:hidden">Generate</span>
+                        </TabsTrigger>
+                          <TabsTrigger value="bulk" className="tab-text text-xs sm:text-sm lg:text-base data-[state=active]:border-b-2 data-[state=active]:border-foreground pb-2.5 sm:pb-3 lg:pb-4 rounded-none bg-transparent border-b-2 border-transparent transition-all duration-200 data-[state=active]:text-foreground text-secondary whitespace-nowrap flex-shrink-0 px-2 sm:px-3 lg:px-4">
+                            <Layers className="h-3 w-3 sm:h-3.5 sm:w-3.5 lg:h-4 lg:w-4 mr-1 sm:mr-1.5 lg:mr-2" />
+                            Bulk
+                          </TabsTrigger>
+                          <TabsTrigger value="multi" className="tab-text text-xs sm:text-sm lg:text-base data-[state=active]:border-b-2 data-[state=active]:border-foreground pb-2.5 sm:pb-3 lg:pb-4 rounded-none bg-transparent border-b-2 border-transparent transition-all duration-200 data-[state=active]:text-foreground text-secondary whitespace-nowrap flex-shrink-0 px-2 sm:px-3 lg:px-4">
+                            <Wallet className="h-3 w-3 sm:h-3.5 sm:w-3.5 lg:h-4 lg:w-4 mr-1 sm:mr-1.5 lg:mr-2" />
+                            <span className="hidden lg:inline">Multi-Account</span>
+                            <span className="lg:hidden">Multi</span>
+                          </TabsTrigger>
+                          <TabsTrigger value="vault" className="tab-text text-xs sm:text-sm lg:text-base data-[state=active]:border-b-2 data-[state=active]:border-foreground pb-2.5 sm:pb-3 lg:pb-4 rounded-none bg-transparent border-b-2 border-transparent transition-all duration-200 data-[state=active]:text-foreground text-secondary whitespace-nowrap flex-shrink-0 px-2 sm:px-3 lg:px-4">
+                            <Unlock className="h-3 w-3 sm:h-3.5 sm:w-3.5 lg:h-4 lg:w-4 mr-1 sm:mr-1.5 lg:mr-2" />
+                            <span className="hidden lg:inline">Decrypt Vault</span>
+                            <span className="lg:hidden">Vault</span>
+                          </TabsTrigger>
+                          <TabsTrigger value="tier" className="tab-text text-xs sm:text-sm lg:text-base data-[state=active]:border-b-2 data-[state=active]:border-foreground pb-2.5 sm:pb-3 lg:pb-4 rounded-none bg-transparent border-b-2 border-transparent transition-all duration-200 data-[state=active]:text-foreground text-secondary whitespace-nowrap flex-shrink-0 px-2 sm:px-3 lg:px-4">
+                            <Shield className="h-3 w-3 sm:h-3.5 sm:w-3.5 lg:h-4 lg:w-4 mr-1 sm:mr-1.5 lg:mr-2" />
+                            <span className="hidden lg:inline">Account Tier</span>
+                            <span className="lg:hidden">Tier</span>
+                          </TabsTrigger>
+                          <TabsTrigger value="auth" className="tab-text text-xs sm:text-sm lg:text-base data-[state=active]:border-b-2 data-[state=active]:border-foreground pb-2.5 sm:pb-3 lg:pb-4 rounded-none bg-transparent border-b-2 border-transparent transition-all duration-200 data-[state=active]:text-foreground text-secondary whitespace-nowrap flex-shrink-0 px-2 sm:px-3 lg:px-4">
+                            <KeyRound className="h-3 w-3 sm:h-3.5 sm:w-3.5 lg:h-4 lg:w-4 mr-1 sm:mr-1.5 lg:mr-2" />
+                            <span className="hidden lg:inline">Auth Token</span>
+                            <span className="lg:hidden">Auth</span>
+                          </TabsTrigger>
+                        </TabsList>
+                      </div>
+                    </div>
                     
                     <TabsContent value="generate" className="mt-6 animate-fade-in">
                       <ApiKeyGeneratorFull 
@@ -241,6 +250,13 @@ function App() {
                     
                     <TabsContent value="tier" className="mt-6 animate-fade-in">
                       <AccountTierManager network={selectedNetwork} />
+                    </TabsContent>
+                    
+                    <TabsContent value="auth" className="mt-6 animate-fade-in">
+                      <AuthTokenGenerator 
+                        network={selectedNetwork} 
+                        defaultAccountIndex={accountIndex}
+                      />
                     </TabsContent>
                   </Tabs>
                 )}
