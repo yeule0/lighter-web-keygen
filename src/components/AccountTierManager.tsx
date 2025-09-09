@@ -478,7 +478,7 @@ export function AccountTierManager({ network }: AccountTierManagerProps) {
                 </li>
                 <li className="flex items-center gap-2">
                   <Zap className="h-3.5 w-3.5 text-purple-600 flex-shrink-0" />
-                  <span>2400 API requests/minute</span>
+                  <span>4000 API requests/minute</span>
                 </li>
               </ul>
             </div>
